@@ -12,7 +12,7 @@ Engine: ffmpeg `x11grab` on XLibre. Face: gtkmm. Peek / SimpleScreenRecorder loo
 
 ## Status (2026-09-26)
 
-**v0.2.0.** Window plus full-screen / region / window capture to WebM or AVI. Optional audio source with a device combo (Pulse then ALSA; Default / Internal microphone if none). FPS, default folder, hide while recording. Packaged. **M4 in this branch:** MP4 / MKV (H.264).
+**v0.3.0.** Window plus full-screen / region / window capture to WebM, AVI, MP4, or MKV. Optional audio source with a device combo (Pulse then ALSA; Default / Internal microphone if none). FPS, default folder, hide while recording. Packaged.
 
 ## 1. Locked decisions
 
@@ -95,7 +95,7 @@ v0.1.0 is WebM (VP8 + optional Vorbis) or AVI (MJPEG + optional PCM). Grow the f
 | MP4 | H.264 (`libx264`, ultrafast) | AAC |
 | MKV | H.264 | Vorbis |
 
-Keep the combo short. No hardware-encode UI, no “every codec ffmpeg lists.” FLAC stays parked as a soundtrack option. **This branch.**
+Keep the combo short. No hardware-encode UI, no “every codec ffmpeg lists.” FLAC stays parked as a soundtrack option. **Shipped in v0.3.0.**
 
 ## 5. Parked
 

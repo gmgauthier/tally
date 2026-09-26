@@ -1,3 +1,9 @@
+tally (0.3.0-1) unstable; urgency=medium
+
+  * M4: MP4 (H.264 + AAC) and MKV (H.264 + Vorbis) in the format combo.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Sat, 26 Sep 2026 19:45:00 +0100
+
 tally (0.2.0-1) unstable; urgency=medium
 
   * M2: hide while recording, FPS, default folder, persist audio source

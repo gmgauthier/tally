@@ -1,12 +1,12 @@
 # Tally backlog
 
-Current release: **v0.2.0**. Last updated: 2026-09-26.
+Current release: **v0.3.0**. Last updated: 2026-09-26.
 
 HyperCam-shaped screen recorder. Binary `tally`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
 ## High Priority
 
-M4 codecs (this branch): MP4 and MKV (H.264), soundtrack AAC / Vorbis.
+None.
 
 ## Low Priority
 
@@ -25,6 +25,8 @@ M4 codecs (this branch): MP4 and MKV (H.264), soundtrack AAC / Vorbis.
 - Peek / SimpleScreenRecorder re-theme
 
 ## Shipped
+
+**v0.3.0** — M4: MP4 (H.264 + AAC) and MKV (H.264 + Vorbis).
 
 **v0.2.0** — M2: hide while recording, FPS, default folder, persist audio source / format / FPS.
 

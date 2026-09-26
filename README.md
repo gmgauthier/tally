@@ -12,7 +12,7 @@ LCOS itself: [https://github.com/BryanLunduke/LCOS](https://github.com/BryanLund
 
 ## Status
 
-**v0.2.0.** Full screen, region, or window to WebM/AVI. Optional audio source, FPS, default folder, hide while recording. M4 in this branch: MP4 / MKV (H.264). See [INSTALL.md](INSTALL.md) and [DEVELOPMENT.md](DEVELOPMENT.md).
+**v0.3.0.** Full screen, region, or window to WebM, AVI, MP4, or MKV. Optional audio source, FPS, default folder, hide while recording. See [INSTALL.md](INSTALL.md) and [DEVELOPMENT.md](DEVELOPMENT.md).
 
 | Doc | What |
 |---|---|
