@@ -41,20 +41,25 @@ std::string find_data_file(const std::string& relative)
   return {};
 }
 
-std::string default_output_path(const std::string& ext, const std::string& dir_in)
+std::string default_output_dir(const std::string& dir_in)
 {
   std::string dir = dir_in;
   if (dir.empty() || !Glib::file_test(dir, Glib::FILE_TEST_IS_DIR))
     dir = Glib::build_filename(Glib::get_home_dir(), "Videos");
   if (!Glib::file_test(dir, Glib::FILE_TEST_IS_DIR))
     dir = Glib::get_home_dir();
+  return dir;
+}
+
+std::string default_output_path(const std::string& ext, const std::string& dir_in)
+{
   std::time_t now = std::time(nullptr);
   std::tm tm{};
   localtime_r(&now, &tm);
   char stamp[32];
   std::strftime(stamp, sizeof(stamp), "%Y%m%d-%H%M%S", &tm);
   const std::string name = std::string("tally-") + stamp + "." + ext;
-  return Glib::build_filename(dir, name);
+  return Glib::build_filename(default_output_dir(dir_in), name);
 }
 
 }  // namespace tally

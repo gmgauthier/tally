@@ -6,7 +6,7 @@ HyperCam-shaped screen recorder. Binary `tally`. Suite catalog: `lcos-projects/P
 
 ## High Priority
 
-None. M2 (hide while recording, last folder/format/mic/FPS) is in this branch.
+None. M2 (hide while recording, default folder, remembered audio/format/FPS) is in this branch.
 
 ## Low Priority
 

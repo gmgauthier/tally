@@ -12,7 +12,7 @@ Engine: ffmpeg `x11grab` on XLibre. Face: gtkmm. Peek / SimpleScreenRecorder loo
 
 ## Status (2026-09-26)
 
-**v0.1.0.** Window plus full-screen / region / window capture to WebM or AVI. Optional mic with a device combo (Pulse then ALSA; Default / Internal microphone if none). Packaged.
+**v0.1.0.** Window plus full-screen / region / window capture to WebM or AVI. Optional audio source with a device combo (Pulse then ALSA; Default / Internal microphone if none). Packaged.
 
 ## 1. Locked decisions
 
@@ -42,13 +42,15 @@ File  Capture  Help
 |              [ Record ]   |
 |              [ Stop   ]   |
 |  Source: Full / Region / Window
-|  [ ] Microphone  [ device combo ]
+|  [ ] Audio source  [ device combo ]
 |  Format: WebM / AVI
+|  FPS
+|  Folder (default destination)
 |  elapsed
 +---------------------------+
 ```
 
-File: Save as (choose output path), Exit.  
+File: Save as (one-shot path), Default folder…, Exit.  
 Capture: Record, Stop.  
 Help: About Tally.
 
@@ -62,7 +64,7 @@ Window pick: same snapshot; hover highlights EWMH client windows (`_NET_CLIENT_L
 
 Preview: a `Gdk::Pixbuf` grab of that rectangle.
 
-Output default: `~/Videos/tally-YYYYMMDD-HHMMSS.webm` (or `~/` if Videos is missing).
+Output default: `tally-YYYYMMDD-HHMMSS.webm` in the Folder control (`~/Videos`, or `~/` if Videos is missing). Remembered in `~/.config/tally/tally.ini` with audio source, format, and FPS.
 
 ## 4. Milestones
 
@@ -76,7 +78,7 @@ Full screen, region, and window via ffmpeg `x11grab`. Optional mic. WebM or AVI.
 
 ### M2 — Chrome polish
 
-FPS control, last folder in `~/.config/tally/tally.ini`, hide-this-window while recording (default on: withdraw the window, hold the Gtk application, floating Stop chip), README screenshot. **Done in this branch.**
+FPS control, default folder + audio source + format + FPS in `~/.config/tally/tally.ini`, hide-this-window while recording (default on: withdraw the window, hold the Gtk application, floating Stop chip), README screenshot. **Done in this branch.**
 
 ### M3 — Package
 
@@ -84,7 +86,7 @@ FPS control, last folder in `~/.config/tally/tally.ini`, hide-this-window while 
 
 ## 5. Parked
 
-FPS combo, cursor on/off, countdown, follow-window, webcam PIP.
+Cursor on/off, countdown, follow-window, webcam PIP.
 
 ## 6. Traps
 

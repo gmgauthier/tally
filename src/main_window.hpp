@@ -54,6 +54,10 @@ class MainWindow : public Gtk::Window {
   void fill_devices();
   void persist_audio();
   void persist_capture();
+  void persist_folder();
+  void sync_dest();
+  void on_default_folder();
+  void on_dest_set();
   void begin_capture();
   void conceal_for_record();
   void reveal_after_record();
@@ -77,12 +81,15 @@ class MainWindow : public Gtk::Window {
   Gtk::RadioButton src_full_{"Full screen"};
   Gtk::RadioButton src_region_{"Region"};
   Gtk::RadioButton src_window_{"Window"};
-  Gtk::CheckButton mic_{"Microphone"};
+  Gtk::CheckButton mic_{"Audio source"};
   Gtk::ComboBoxText device_;
   Gtk::ComboBoxText format_;
   Gtk::Box fps_row_{Gtk::ORIENTATION_HORIZONTAL, 6};
   Gtk::Label fps_lab_{"FPS"};
   Gtk::ComboBoxText fps_;
+  Gtk::Box dest_row_{Gtk::ORIENTATION_HORIZONTAL, 6};
+  Gtk::Label dest_lab_{"Folder"};
+  Gtk::FileChooserButton dest_{"Select folder", Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER};
   Gtk::CheckButton hide_win_{"Hide this window"};
   Gtk::Label elapsed_{"0:00"};
   Gtk::Label status_{"Ready"};
@@ -101,6 +108,7 @@ class MainWindow : public Gtk::Window {
   bool picking_ = false;
   bool hidden_for_record_ = false;
   bool held_ = false;
+  bool persist_ok_ = false;
 };
 
 }  // namespace tally

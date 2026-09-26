@@ -63,6 +63,10 @@ MainWindow::MainWindow()
   fps_.set_active_id("10");
   fps_row_.pack_start(fps_lab_, Gtk::PACK_SHRINK);
   fps_row_.pack_start(fps_, Gtk::PACK_EXPAND_WIDGET);
+  dest_.set_hexpand(true);
+  dest_.set_tooltip_text("Default folder for new recordings");
+  dest_row_.pack_start(dest_lab_, Gtk::PACK_SHRINK);
+  dest_row_.pack_start(dest_, Gtk::PACK_EXPAND_WIDGET);
   hide_win_.set_active(true);
   hide_win_.set_tooltip_text(
       "Minimize Tally while recording. Stop from the floating Stop button, the taskbar, or Ctrl+.");
@@ -86,6 +90,7 @@ MainWindow::MainWindow()
   right_.pack_start(device_, Gtk::PACK_SHRINK);
   right_.pack_start(format_, Gtk::PACK_SHRINK);
   right_.pack_start(fps_row_, Gtk::PACK_SHRINK);
+  right_.pack_start(dest_row_, Gtk::PACK_SHRINK);
   right_.pack_start(hide_win_, Gtk::PACK_SHRINK);
   right_.pack_start(elapsed_, Gtk::PACK_SHRINK);
 
@@ -96,12 +101,6 @@ MainWindow::MainWindow()
   btn_stop_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_stop));
   cap_.signal_stopped().connect(sigc::mem_fun(*this, &MainWindow::on_stopped));
   cap_.signal_error().connect(sigc::mem_fun(*this, &MainWindow::on_error));
-  mic_.signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::persist_audio));
-  device_.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::persist_audio));
-  format_.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::persist_capture));
-  fps_.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::persist_capture));
-  hide_win_.signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::persist_capture));
-
   root_.pack_start(menubar_, Gtk::PACK_SHRINK);
   root_.pack_start(well_, Gtk::PACK_SHRINK);
   add(root_);
@@ -112,6 +111,16 @@ MainWindow::MainWindow()
     format_.set_active_id(settings_.format);
   fps_.set_active_id(Glib::ustring::compose("%1", settings_.fps));
   fill_devices();
+  sync_dest();
+  persist_ok_ = true;
+  /* Persist after widgets match the ini. Connecting earlier overwrote
+   * device/format/fps with combo defaults on set_active. */
+  mic_.signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::persist_audio));
+  device_.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::persist_audio));
+  format_.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::persist_capture));
+  fps_.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::persist_capture));
+  hide_win_.signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::persist_capture));
+  dest_.signal_file_set().connect(sigc::mem_fun(*this, &MainWindow::on_dest_set));
   refresh_preview();
   show_all();
 }
@@ -170,6 +179,7 @@ void MainWindow::build_menu()
 
   auto* file = Gtk::manage(new Gtk::Menu());
   add_item(*file, "Save _As…", sigc::mem_fun(*this, &MainWindow::on_save_as));
+  add_item(*file, "Default _folder…", sigc::mem_fun(*this, &MainWindow::on_default_folder));
   file->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
   add_item(*file, "E_xit", sigc::mem_fun(*this, &MainWindow::on_quit));
   add_menu("_File", *file);
@@ -268,19 +278,62 @@ AudioDevice MainWindow::selected_device() const
 void MainWindow::persist_audio()
 {
   settings_.mic = mic_.get_active();
-  settings_.audio_device = selected_device().id;
-  settings_.save();
+  if (!device_.get_active_id().empty())
+    settings_.audio_device = selected_device().id;
+  if (persist_ok_)
+    settings_.save();
   device_.set_sensitive(mic_.get_active() && !cap_.running());
 }
 
 void MainWindow::persist_capture()
 {
-  settings_.format = format_.get_active_id().raw();
-  if (settings_.format.empty())
-    settings_.format = "webm";
+  const std::string fmt = format_.get_active_id().raw();
+  if (fmt == "avi" || fmt == "webm")
+    settings_.format = fmt;
   settings_.fps = selected_fps();
   settings_.hide_window = hide_win_.get_active();
+  if (persist_ok_)
+    settings_.save();
+}
+
+void MainWindow::persist_folder()
+{
+  if (!persist_ok_)
+    return;
   settings_.save();
+}
+
+void MainWindow::sync_dest()
+{
+  dest_.set_current_folder(default_output_dir(settings_.last_folder));
+}
+
+void MainWindow::on_dest_set()
+{
+  const std::string dir = dest_.get_filename();
+  if (dir.empty() || !Glib::file_test(dir, Glib::FILE_TEST_IS_DIR))
+    return;
+  settings_.last_folder = dir;
+  save_path_.clear();
+  persist_folder();
+}
+
+void MainWindow::on_default_folder()
+{
+  Gtk::FileChooserDialog dlg(*this, "Default folder for recordings",
+                             Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+  dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+  dlg.add_button("_Select", Gtk::RESPONSE_ACCEPT);
+  dlg.set_current_folder(default_output_dir(settings_.last_folder));
+  if (dlg.run() != Gtk::RESPONSE_ACCEPT)
+    return;
+  const std::string dir = dlg.get_filename();
+  if (dir.empty() || !Glib::file_test(dir, Glib::FILE_TEST_IS_DIR))
+    return;
+  settings_.last_folder = dir;
+  save_path_.clear();
+  persist_folder();
+  sync_dest();
 }
 
 int MainWindow::selected_fps() const
@@ -438,6 +491,9 @@ void MainWindow::begin_capture()
   persist_capture();
   auto opts = current_opts();
   save_path_ = opts.path;
+  settings_.last_folder = Glib::path_get_dirname(save_path_);
+  persist_folder();
+  sync_dest();
   refresh_preview();
   if (!cap_.start(opts))
     return;
@@ -543,6 +599,7 @@ void MainWindow::sync_buttons()
   device_.set_sensitive(!run && mic_.get_active());
   format_.set_sensitive(!run);
   fps_.set_sensitive(!run);
+  dest_.set_sensitive(!run);
   hide_win_.set_sensitive(!run);
 }
 
@@ -561,6 +618,7 @@ void MainWindow::on_save_as()
   save_path_ = dlg.get_filename();
   settings_.last_folder = Glib::path_get_dirname(save_path_);
   persist_capture();
+  sync_dest();
   status_.set_text("Next capture: " + Glib::path_get_basename(save_path_));
 }
 
