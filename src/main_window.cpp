@@ -97,9 +97,16 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
+  picking_ = false;
+  release_app();
   if (tick_.connected())
     tick_.disconnect();
-  delete picker_;
+  if (picker_) {
+    if (auto app = get_application())
+      app->remove_window(*picker_);
+    delete picker_;
+    picker_ = nullptr;
+  }
 }
 
 void MainWindow::load_css()
@@ -251,9 +258,30 @@ CaptureOpts MainWindow::current_opts() const
   return o;
 }
 
+void MainWindow::hold_app()
+{
+  if (held_)
+    return;
+  if (auto app = get_application()) {
+    app->hold();
+    held_ = true;
+  }
+}
+
+void MainWindow::release_app()
+{
+  if (!held_)
+    return;
+  if (auto app = get_application())
+    app->release();
+  held_ = false;
+}
+
 void MainWindow::start_pick(RegionPick::Mode mode)
 {
-  hide();
+  picking_ = true;
+  hold_app();
+  iconify();
   if (auto dpy = Gdk::Display::get_default())
     dpy->sync();
   Glib::signal_timeout().connect(
@@ -262,12 +290,17 @@ void MainWindow::start_pick(RegionPick::Mode mode)
           dpy->sync();
         auto pix = snapshot_desktop();
         if (!pix) {
+          picking_ = false;
+          release_app();
+          deiconify();
           present();
           status_.set_text("Could not snapshot the desktop");
           return false;
         }
         if (!picker_) {
           picker_ = new RegionPick();
+          if (auto app = get_application())
+            app->add_window(*picker_);
           picker_->signal_picked().connect(sigc::mem_fun(*this, &MainWindow::on_region));
           picker_->signal_cancelled().connect(sigc::mem_fun(*this, &MainWindow::on_region_cancel));
         }
@@ -285,7 +318,7 @@ void MainWindow::start_pick(RegionPick::Mode mode)
           status_.set_text("No windows to pick");
         return false;
       },
-      80);
+      200);
 }
 
 void MainWindow::on_record()
@@ -319,6 +352,9 @@ void MainWindow::on_record()
 
 void MainWindow::on_region(Rect r)
 {
+  picking_ = false;
+  release_app();
+  deiconify();
   present();
   last_rect_ = r;
   auto opts = current_opts();
@@ -338,6 +374,9 @@ void MainWindow::on_region(Rect r)
 
 void MainWindow::on_region_cancel()
 {
+  picking_ = false;
+  release_app();
+  deiconify();
   present();
   status_.set_text("Cancelled");
 }

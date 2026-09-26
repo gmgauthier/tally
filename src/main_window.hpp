@@ -18,6 +18,10 @@ class MainWindow : public Gtk::Window {
  public:
   MainWindow();
   ~MainWindow() override;
+  bool picking() const
+  {
+    return picking_;
+  }
 
  private:
   void load_css();
@@ -37,6 +41,8 @@ class MainWindow : public Gtk::Window {
   void refresh_preview();
   Rect full_screen() const;
   void start_pick(RegionPick::Mode mode);
+  void hold_app();
+  void release_app();
   CaptureOpts current_opts() const;
   std::string ext() const;
   void fill_devices();
@@ -73,6 +79,8 @@ class MainWindow : public Gtk::Window {
   std::string save_path_;
   sigc::connection tick_;
   int seconds_ = 0;
+  bool picking_ = false;
+  bool held_ = false;
 };
 
 }  // namespace tally
