@@ -24,6 +24,9 @@ class MainWindow : public Gtk::Window {
     return picking_ || hidden_for_record_;
   }
 
+ protected:
+  bool on_delete_event(GdkEventAny* event) override;
+
  private:
   void load_css();
   void build_menu();
@@ -42,8 +45,10 @@ class MainWindow : public Gtk::Window {
   void refresh_preview();
   Rect full_screen() const;
   void start_pick(RegionPick::Mode mode);
-  void park();
-  void unpark();
+  void acquire_run();
+  void release_run();
+  void withdraw_main();
+  void restore_main();
   void drop_picker();
   void drop_chip();
   CaptureOpts current_opts() const;
@@ -95,9 +100,7 @@ class MainWindow : public Gtk::Window {
   int seconds_ = 0;
   bool picking_ = false;
   bool hidden_for_record_ = false;
-  bool parked_ = false;
-  int rest_x_ = 0;
-  int rest_y_ = 0;
+  int holds_ = 0;
 };
 
 }  // namespace tally

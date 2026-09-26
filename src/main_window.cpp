@@ -293,26 +293,36 @@ CaptureOpts MainWindow::current_opts() const
   return o;
 }
 
-void MainWindow::park()
+void MainWindow::acquire_run()
 {
-  if (parked_)
+  if (holds_ > 0)
     return;
-  get_position(rest_x_, rest_y_);
-  parked_ = true;
-  set_skip_taskbar_hint(true);
-  set_skip_pager_hint(true);
-  move(-8000, -8000);
+  if (auto app = get_application()) {
+    app->hold();
+    holds_ = 1;
+  }
 }
 
-void MainWindow::unpark()
+void MainWindow::release_run()
 {
-  if (!parked_)
+  if (holds_ <= 0)
     return;
-  parked_ = false;
-  set_skip_taskbar_hint(false);
-  set_skip_pager_hint(false);
-  move(rest_x_, rest_y_);
+  if (auto app = get_application())
+    app->release();
+  holds_ = 0;
+}
+
+void MainWindow::withdraw_main()
+{
+  acquire_run();
+  hide();
+}
+
+void MainWindow::restore_main()
+{
+  show();
   present();
+  release_run();
 }
 
 void MainWindow::drop_picker()
@@ -338,7 +348,7 @@ void MainWindow::drop_chip()
 void MainWindow::start_pick(RegionPick::Mode mode)
 {
   picking_ = true;
-  park();
+  withdraw_main();
   if (auto dpy = Gdk::Display::get_default())
     dpy->sync();
   Glib::signal_timeout().connect(
@@ -348,7 +358,7 @@ void MainWindow::start_pick(RegionPick::Mode mode)
         auto pix = snapshot_desktop();
         if (!pix) {
           picking_ = false;
-          unpark();
+          restore_main();
           status_.set_text("Could not snapshot the desktop");
           return false;
         }
@@ -403,14 +413,14 @@ void MainWindow::on_region(Rect r)
   last_rect_ = r;
   begin_capture();
   if (!hidden_for_record_)
-    unpark();
+    restore_main();
 }
 
 void MainWindow::on_region_cancel()
 {
   picking_ = false;
   drop_picker();
-  unpark();
+  restore_main();
   status_.set_text("Cancelled");
 }
 
@@ -453,7 +463,6 @@ void MainWindow::conceal_for_record()
   if (!hide_win_.get_active())
     return;
   hidden_for_record_ = true;
-  park();
   ensure_stop_chip();
   chip_->set_elapsed(elapsed_.get_text());
   chip_->show_all();
@@ -461,6 +470,7 @@ void MainWindow::conceal_for_record()
     if (chip_ && chip_->get_visible())
       chip_->place_corner();
   });
+  withdraw_main();
 }
 
 void MainWindow::reveal_after_record()
@@ -469,7 +479,7 @@ void MainWindow::reveal_after_record()
   if (!hidden_for_record_)
     return;
   hidden_for_record_ = false;
-  unpark();
+  restore_main();
 }
 
 void MainWindow::on_stopped()
@@ -543,15 +553,21 @@ void MainWindow::on_quit()
 {
   picking_ = false;
   hidden_for_record_ = false;
-  parked_ = false;
   if (tick_.connected())
     tick_.disconnect();
   drop_chip();
   drop_picker();
   if (cap_.running())
     cap_.stop();
+  release_run();
   if (auto app = get_application())
     app->quit();
+}
+
+bool MainWindow::on_delete_event(GdkEventAny*)
+{
+  on_quit();
+  return true;
 }
 
 void MainWindow::on_about()
