@@ -91,6 +91,19 @@ std::vector<std::string> Capture::build_argv(const CaptureOpts& opts) const
                                                                             : opts.audio.id);
     }
   }
+  auto video_x264 = [&]() {
+    argv.emplace_back("-c:v");
+    argv.emplace_back("libx264");
+    argv.emplace_back("-preset");
+    argv.emplace_back("ultrafast");
+    argv.emplace_back("-tune");
+    argv.emplace_back("zerolatency");
+    argv.emplace_back("-crf");
+    argv.emplace_back("23");
+    argv.emplace_back("-pix_fmt");
+    argv.emplace_back("yuv420p");
+  };
+
   if (opts.format == Format::avi) {
     argv.emplace_back("-c:v");
     argv.emplace_back("mjpeg");
@@ -102,6 +115,24 @@ std::vector<std::string> Capture::build_argv(const CaptureOpts& opts) const
     }
     argv.emplace_back("-f");
     argv.emplace_back("avi");
+  } else if (opts.format == Format::mp4) {
+    video_x264();
+    if (opts.mic) {
+      argv.emplace_back("-c:a");
+      argv.emplace_back("aac");
+      argv.emplace_back("-b:a");
+      argv.emplace_back("128k");
+    }
+    argv.emplace_back("-f");
+    argv.emplace_back("mp4");
+  } else if (opts.format == Format::mkv) {
+    video_x264();
+    if (opts.mic) {
+      argv.emplace_back("-c:a");
+      argv.emplace_back("libvorbis");
+    }
+    argv.emplace_back("-f");
+    argv.emplace_back("matroska");
   } else {
     argv.emplace_back("-c:v");
     argv.emplace_back("libvpx");

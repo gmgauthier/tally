@@ -59,7 +59,7 @@ void Settings::load()
   }
   if (fps != 5 && fps != 10 && fps != 15 && fps != 30)
     fps = 10;
-  if (format != "avi")
+  if (format != "avi" && format != "mp4" && format != "mkv")
     format = "webm";
 }
 

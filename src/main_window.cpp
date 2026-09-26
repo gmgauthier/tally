@@ -55,6 +55,8 @@ MainWindow::MainWindow()
 
   format_.append("webm", "WebM (VP8)");
   format_.append("avi", "AVI (MJPEG)");
+  format_.append("mp4", "MP4 (H.264)");
+  format_.append("mkv", "MKV (H.264)");
   format_.set_active_id("webm");
   fps_.append("5", "5");
   fps_.append("10", "10");
@@ -107,7 +109,7 @@ MainWindow::MainWindow()
   settings_.load();
   mic_.set_active(settings_.mic);
   hide_win_.set_active(settings_.hide_window);
-  if (settings_.format == "avi" || settings_.format == "webm")
+  if (known_format_id(settings_.format))
     format_.set_active_id(settings_.format);
   fps_.set_active_id(Glib::ustring::compose("%1", settings_.fps));
   fill_devices();
@@ -246,7 +248,7 @@ void MainWindow::refresh_preview()
 
 std::string MainWindow::ext() const
 {
-  return format_.get_active_id() == "avi" ? "avi" : "webm";
+  return format_ext(format_from_id(format_.get_active_id().raw()));
 }
 
 void MainWindow::fill_devices()
@@ -288,10 +290,18 @@ void MainWindow::persist_audio()
 void MainWindow::persist_capture()
 {
   const std::string fmt = format_.get_active_id().raw();
-  if (fmt == "avi" || fmt == "webm")
+  if (known_format_id(fmt))
     settings_.format = fmt;
   settings_.fps = selected_fps();
   settings_.hide_window = hide_win_.get_active();
+  if (!save_path_.empty()) {
+    const std::string dir = Glib::path_get_dirname(save_path_);
+    std::string base = Glib::path_get_basename(save_path_);
+    const auto dot = base.rfind('.');
+    if (dot != std::string::npos)
+      base = base.substr(0, dot);
+    save_path_ = Glib::build_filename(dir, base + "." + ext());
+  }
   if (persist_ok_)
     settings_.save();
 }
@@ -350,7 +360,7 @@ CaptureOpts MainWindow::current_opts() const
   o.rect = last_rect_.w >= 2 ? last_rect_ : full_screen();
   o.mic = mic_.get_active();
   o.audio = selected_device();
-  o.format = format_.get_active_id() == "avi" ? Format::avi : Format::webm;
+  o.format = format_from_id(format_.get_active_id().raw());
   o.fps = selected_fps();
   o.path = save_path_.empty() ? default_output_path(ext(), settings_.last_folder) : save_path_;
   return o;

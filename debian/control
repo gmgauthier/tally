@@ -24,4 +24,4 @@ Depends:
  ffmpeg
 Description: HyperCam-shaped screen recorder for LCOS
  Tally is a gtkmm-3 screen recorder: full screen, region, or window
- via ffmpeg x11grab, optional microphone, WebM or AVI.
+ via ffmpeg x11grab, optional audio source, WebM, AVI, MP4, or MKV.

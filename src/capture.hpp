@@ -14,7 +14,43 @@
 
 namespace tally {
 
-enum class Format { webm, avi };
+enum class Format { webm, avi, mp4, mkv };
+
+inline Format format_from_id(const std::string& id)
+{
+  if (id == "avi")
+    return Format::avi;
+  if (id == "mp4")
+    return Format::mp4;
+  if (id == "mkv")
+    return Format::mkv;
+  return Format::webm;
+}
+
+inline const char* format_id(Format f)
+{
+  switch (f) {
+    case Format::avi:
+      return "avi";
+    case Format::mp4:
+      return "mp4";
+    case Format::mkv:
+      return "mkv";
+    case Format::webm:
+    default:
+      return "webm";
+  }
+}
+
+inline const char* format_ext(Format f)
+{
+  return format_id(f);
+}
+
+inline bool known_format_id(const std::string& id)
+{
+  return id == "webm" || id == "avi" || id == "mp4" || id == "mkv";
+}
 
 struct CaptureOpts {
   Rect rect;

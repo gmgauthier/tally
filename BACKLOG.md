@@ -6,7 +6,7 @@ HyperCam-shaped screen recorder. Binary `tally`. Suite catalog: `lcos-projects/P
 
 ## High Priority
 
-None.
+M4 codecs (this branch): MP4 and MKV (H.264), soundtrack AAC / Vorbis.
 
 ## Low Priority
 

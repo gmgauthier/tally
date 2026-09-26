@@ -12,7 +12,7 @@ Engine: ffmpeg `x11grab` on XLibre. Face: gtkmm. Peek / SimpleScreenRecorder loo
 
 ## Status (2026-09-26)
 
-**v0.2.0.** Window plus full-screen / region / window capture to WebM or AVI. Optional audio source with a device combo (Pulse then ALSA; Default / Internal microphone if none). FPS, default folder, hide while recording. Packaged.
+**v0.2.0.** Window plus full-screen / region / window capture to WebM or AVI. Optional audio source with a device combo (Pulse then ALSA; Default / Internal microphone if none). FPS, default folder, hide while recording. Packaged. **M4 in this branch:** MP4 / MKV (H.264).
 
 ## 1. Locked decisions
 
@@ -23,7 +23,7 @@ Engine: ffmpeg `x11grab` on XLibre. Face: gtkmm. Peek / SimpleScreenRecorder loo
 | Rejected | HyperCam (trademark), Screencap, Reel, Camroll |
 | Toolkit | C++17, gtkmm-3.0, GTK3 CSS, Meson |
 | Engine | ffmpeg on PATH. `x11grab` + optional `pulse`. No daemon |
-| File | WebM (VP8) default. AVI (MJPEG) as the 90s option |
+| File | WebM (VP8) default. AVI (MJPEG) as the 90s option. MP4 / MKV (H.264) |
 | Look | Small decorated window. Big Record / Stop. Red tally lamp. Tiny preview |
 | Source | Full screen, drag-region, or click-a-window. Rectangle of the desktop (not a compositor portal) |
 | Network | None |
@@ -43,7 +43,7 @@ File  Capture  Help
 |              [ Stop   ]   |
 |  Source: Full / Region / Window
 |  [ ] Audio source  [ device combo ]
-|  Format: WebM / AVI
+|  Format: WebM / AVI / MP4 / MKV
 |  FPS
 |  Folder (default destination)
 |  elapsed
@@ -83,6 +83,19 @@ FPS control, default folder + audio source + format + FPS in `~/.config/tally/ta
 ### M3 — Package
 
 `debian/` (Depends: ffmpeg), `scripts/release.sh`. **Shipped in v0.1.0.**
+
+### M4 — Codecs
+
+v0.1.0 is WebM (VP8 + optional Vorbis) or AVI (MJPEG + optional PCM). Grow the format combo with codecs that ffmpeg on LCOS actually has. Do not become OBS.
+
+| Format | Video | Audio (when mic is on) |
+|---|---|---|
+| WebM | VP8 (already) | Vorbis (libvorbis) |
+| AVI | MJPEG (already) | PCM |
+| MP4 | H.264 (`libx264`, ultrafast) | AAC |
+| MKV | H.264 | Vorbis |
+
+Keep the combo short. No hardware-encode UI, no “every codec ffmpeg lists.” FLAC stays parked as a soundtrack option. **This branch.**
 
 ## 5. Parked
 
