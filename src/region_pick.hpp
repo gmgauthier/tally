@@ -29,6 +29,11 @@ class RegionPick : public Gtk::Window {
 
   void begin(const Glib::RefPtr<Gdk::Pixbuf>& desktop, Mode mode,
              const std::vector<ClientWin>& windows);
+  void release_snapshot()
+  {
+    desktop_.reset();
+    windows_.clear();
+  }
 
   sigc::signal<void, Rect>& signal_picked()
   {

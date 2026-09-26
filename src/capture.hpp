@@ -41,6 +41,7 @@ class Capture {
 
   bool start(const CaptureOpts& opts);
   void stop();
+  void kill_now();
 
   sigc::signal<void>& signal_stopped()
   {

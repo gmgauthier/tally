@@ -7,6 +7,7 @@
 
 #include <gdk/gdk.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
@@ -218,6 +219,10 @@ void MainWindow::refresh_preview()
     return;
   try {
     auto pix = Gdk::Pixbuf::create(root, r.x, r.y, r.w, r.h);
+    if (pix && pix->get_width() > 400) {
+      const int nh = std::max(1, pix->get_height() * 400 / pix->get_width());
+      pix = pix->scale_simple(400, nh, Gdk::INTERP_BILINEAR);
+    }
     preview_.set_pixbuf(pix);
   } catch (const Glib::Error&) {
     preview_.clear();
@@ -309,6 +314,7 @@ void MainWindow::drop_picker()
   if (!picker_)
     return;
   picker_->hide();
+  picker_->release_snapshot();
   if (auto app = get_application())
     app->remove_window(*picker_);
   delete picker_;
@@ -435,7 +441,8 @@ void MainWindow::ensure_stop_chip()
   if (chip_)
     return;
   chip_ = new StopChip();
-  chip_->signal_stop().connect(sigc::mem_fun(*this, &MainWindow::on_stop));
+  chip_->signal_stop().connect(
+      [this]() { Glib::signal_idle().connect_once([this]() { on_stop(); }); });
   chip_->signal_realize().connect([this]() {
     if (!chip_)
       return;
@@ -463,11 +470,14 @@ void MainWindow::conceal_for_record()
 
 void MainWindow::reveal_after_record()
 {
-  drop_chip();
-  if (!hidden_for_record_)
-    return;
-  hidden_for_record_ = false;
-  restore_main();
+  /* Restore Tally before removing the chip. The chip is the mapped
+   * application window while we are hidden; deleting it first quits the app
+   * and orphans ffmpeg. */
+  if (hidden_for_record_) {
+    hidden_for_record_ = false;
+    restore_main();
+  }
+  Glib::signal_idle().connect_once([this]() { drop_chip(); });
 }
 
 void MainWindow::on_stopped()
@@ -546,7 +556,7 @@ void MainWindow::on_quit()
   drop_chip();
   drop_picker();
   if (cap_.running())
-    cap_.stop();
+    cap_.kill_now();
   auto app = get_application();
   if (app)
     app->remove_window(*this);

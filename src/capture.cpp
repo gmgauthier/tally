@@ -5,6 +5,7 @@
 #include <glib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/prctl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -14,6 +15,13 @@
 
 namespace tally {
 namespace {
+
+void ffmpeg_child_setup()
+{
+  /* If Tally dies, ffmpeg must not keep grabbing the desktop into RAM. */
+  prctl(PR_SET_PDEATHSIG, SIGTERM);
+  setpgid(0, 0);
+}
 
 int even(int v)
 {
@@ -131,9 +139,9 @@ bool Capture::start(const CaptureOpts& opts)
   stdin_fd_ = -1;
   pid_ = 0;
   try {
-    Glib::spawn_async_with_pipes(std::string(), argv,
-                                 Glib::SPAWN_SEARCH_PATH | Glib::SPAWN_DO_NOT_REAP_CHILD,
-                                 sigc::slot<void()>(), &pid_, &stdin_fd_, nullptr, nullptr);
+    Glib::spawn_async_with_pipes(
+        std::string(), argv, Glib::SPAWN_SEARCH_PATH | Glib::SPAWN_DO_NOT_REAP_CHILD,
+        sigc::ptr_fun(&ffmpeg_child_setup), &pid_, &stdin_fd_, nullptr, nullptr);
   } catch (const Glib::Error& e) {
     signal_error_.emit(e.what());
     return false;
@@ -149,14 +157,18 @@ void Capture::stop()
     return;
   if (stdin_fd_ >= 0) {
     const char q[] = "q\n";
-    if (write(stdin_fd_, q, 2) < 0) {
-      kill(pid_, SIGINT);
-    }
+    if (write(stdin_fd_, q, 2) < 0)
+      kill(-pid_, SIGINT);
     close(stdin_fd_);
     stdin_fd_ = -1;
   } else {
-    kill(pid_, SIGINT);
+    kill(-pid_, SIGINT);
   }
+}
+
+void Capture::kill_now()
+{
+  reap();
 }
 
 void Capture::on_child(GPid pid, int status)
@@ -181,8 +193,8 @@ void Capture::reap()
   if (child_.connected())
     child_.disconnect();
   if (pid_ > 0) {
-    kill(pid_, SIGTERM);
-    waitpid(pid_, nullptr, WNOHANG);
+    kill(-pid_, SIGTERM);
+    waitpid(pid_, nullptr, 0);
     Glib::spawn_close_pid(pid_);
     pid_ = 0;
   }
