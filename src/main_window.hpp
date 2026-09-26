@@ -2,11 +2,15 @@
 
 #pragma once
 
+#include "audio_devices.hpp"
 #include "capture.hpp"
 #include "preview.hpp"
 #include "region_pick.hpp"
+#include "settings.hpp"
 
 #include <gtkmm.h>
+
+#include <vector>
 
 namespace tally {
 
@@ -35,6 +39,9 @@ class MainWindow : public Gtk::Window {
   bool pick_window(Rect& out);
   CaptureOpts current_opts() const;
   std::string ext() const;
+  void fill_devices();
+  void persist_audio();
+  AudioDevice selected_device() const;
 
   Gtk::MenuItem* add_item(Gtk::Menu& menu, const Glib::ustring& label,
                           const sigc::slot<void()>& slot, guint key = 0,
@@ -53,11 +60,14 @@ class MainWindow : public Gtk::Window {
   Gtk::RadioButton src_region_{"Region"};
   Gtk::RadioButton src_window_{"Window"};
   Gtk::CheckButton mic_{"Microphone"};
+  Gtk::ComboBoxText device_;
   Gtk::ComboBoxText format_;
   Gtk::Label elapsed_{"0:00"};
   Gtk::Label status_{"Ready"};
   Glib::RefPtr<Gtk::AccelGroup> accel_;
   Capture cap_;
+  Settings settings_;
+  std::vector<AudioDevice> devices_;
   RegionPick* picker_ = nullptr;
   Rect last_rect_{};
   std::string save_path_;

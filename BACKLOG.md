@@ -28,4 +28,4 @@ HyperCam-shaped screen recorder. Binary `tally`. Suite catalog: `lcos-projects/P
 
 ## Shipped
 
-Nothing tagged yet. M0–M1 are in this tree: window, full-screen / region / window `x11grab`, optional mic, WebM or AVI.
+Nothing tagged yet. M0–M1 are in this tree: window, full-screen / region / window `x11grab`, optional mic with device combo, WebM or AVI.

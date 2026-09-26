@@ -53,6 +53,7 @@ MainWindow::MainWindow()
   format_.append("webm", "WebM (VP8)");
   format_.append("avi", "AVI (MJPEG)");
   format_.set_active_id("webm");
+  device_.set_hexpand(true);
 
   left_.set_border_width(8);
   left_.pack_start(preview_, Gtk::PACK_SHRINK);
@@ -69,6 +70,7 @@ MainWindow::MainWindow()
   right_.pack_start(btn_stop_, Gtk::PACK_SHRINK);
   right_.pack_start(*src, Gtk::PACK_SHRINK);
   right_.pack_start(mic_, Gtk::PACK_SHRINK);
+  right_.pack_start(device_, Gtk::PACK_SHRINK);
   right_.pack_start(format_, Gtk::PACK_SHRINK);
   right_.pack_start(elapsed_, Gtk::PACK_SHRINK);
 
@@ -79,10 +81,15 @@ MainWindow::MainWindow()
   btn_stop_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_stop));
   cap_.signal_stopped().connect(sigc::mem_fun(*this, &MainWindow::on_stopped));
   cap_.signal_error().connect(sigc::mem_fun(*this, &MainWindow::on_error));
+  mic_.signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::persist_audio));
+  device_.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::persist_audio));
 
   root_.pack_start(menubar_, Gtk::PACK_SHRINK);
   root_.pack_start(well_, Gtk::PACK_SHRINK);
   add(root_);
+  settings_.load();
+  mic_.set_active(settings_.mic);
+  fill_devices();
   refresh_preview();
   show_all();
 }
@@ -198,11 +205,46 @@ std::string MainWindow::ext() const
   return format_.get_active_id() == "avi" ? "avi" : "webm";
 }
 
+void MainWindow::fill_devices()
+{
+  devices_ = list_audio_inputs();
+  const std::string keep =
+      device_.get_active_id().empty() ? settings_.audio_device : device_.get_active_id().raw();
+  device_.remove_all();
+  for (const auto& d : devices_)
+    device_.append(d.id, d.label);
+  device_.set_active_id(pick_audio_device(devices_, keep));
+  persist_audio();
+}
+
+AudioDevice MainWindow::selected_device() const
+{
+  const std::string id = device_.get_active_id().raw();
+  for (const auto& d : devices_) {
+    if (d.id == id)
+      return d;
+  }
+  AudioDevice def;
+  def.id = "default";
+  def.label = "Default";
+  def.backend = AudioBackend::system_default;
+  return def;
+}
+
+void MainWindow::persist_audio()
+{
+  settings_.mic = mic_.get_active();
+  settings_.audio_device = selected_device().id;
+  settings_.save();
+  device_.set_sensitive(mic_.get_active() && !cap_.running());
+}
+
 CaptureOpts MainWindow::current_opts() const
 {
   CaptureOpts o;
   o.rect = last_rect_.w >= 2 ? last_rect_ : full_screen();
   o.mic = mic_.get_active();
+  o.audio = selected_device();
   o.format = format_.get_active_id() == "avi" ? Format::avi : Format::webm;
   o.path = save_path_.empty() ? default_output_path(ext()) : save_path_;
   return o;
@@ -263,6 +305,7 @@ void MainWindow::on_record()
 {
   if (cap_.running())
     return;
+  fill_devices();
   if (src_full_.get_active()) {
     last_rect_ = full_screen();
   } else if (src_region_.get_active()) {
@@ -367,6 +410,7 @@ void MainWindow::sync_buttons()
   src_region_.set_sensitive(!run);
   src_window_.set_sensitive(!run);
   mic_.set_sensitive(!run);
+  device_.set_sensitive(!run && mic_.get_active());
   format_.set_sensitive(!run);
 }
 

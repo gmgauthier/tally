@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "audio_devices.hpp"
 #include "region_pick.hpp"
 
 #include <glibmm/ustring.h>
@@ -18,6 +19,7 @@ enum class Format { webm, avi };
 struct CaptureOpts {
   Rect rect;
   bool mic = false;
+  AudioDevice audio;
   Format format = Format::webm;
   std::string path;
 };

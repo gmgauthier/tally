@@ -63,10 +63,19 @@ std::vector<std::string> Capture::build_argv(const CaptureOpts& opts) const
   argv.emplace_back("-i");
   argv.emplace_back(src.str());
   if (opts.mic) {
-    argv.emplace_back("-f");
-    argv.emplace_back("pulse");
-    argv.emplace_back("-i");
-    argv.emplace_back("default");
+    if (opts.audio.backend == AudioBackend::alsa && !opts.audio.id.empty() &&
+        opts.audio.id != "default") {
+      argv.emplace_back("-f");
+      argv.emplace_back("alsa");
+      argv.emplace_back("-i");
+      argv.emplace_back(opts.audio.id);
+    } else {
+      argv.emplace_back("-f");
+      argv.emplace_back("pulse");
+      argv.emplace_back("-i");
+      argv.emplace_back(opts.audio.id.empty() || opts.audio.id == "default" ? "default"
+                                                                            : opts.audio.id);
+    }
   }
   if (opts.format == Format::avi) {
     argv.emplace_back("-c:v");

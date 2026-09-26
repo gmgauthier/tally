@@ -36,6 +36,8 @@ executable(
   'src/capture.cpp',
   'src/preview.cpp',
   'src/region_pick.cpp',
+  'src/audio_devices.cpp',
+  'src/settings.cpp',
   include_directories: inc,
   dependencies: [gtkmm],
   install: true,
