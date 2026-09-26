@@ -63,6 +63,8 @@ MainWindow::MainWindow()
   fps_row_.pack_start(fps_lab_, Gtk::PACK_SHRINK);
   fps_row_.pack_start(fps_, Gtk::PACK_EXPAND_WIDGET);
   hide_win_.set_active(true);
+  hide_win_.set_tooltip_text(
+      "Minimize Tally while recording. Stop from the floating Stop button, the taskbar, or Ctrl+.");
   device_.set_hexpand(true);
 
   left_.set_border_width(8);
@@ -124,6 +126,12 @@ MainWindow::~MainWindow()
       app->remove_window(*picker_);
     delete picker_;
     picker_ = nullptr;
+  }
+  if (chip_) {
+    if (auto app = get_application())
+      app->remove_window(*chip_);
+    delete chip_;
+    chip_ = nullptr;
   }
 }
 
@@ -424,6 +432,16 @@ void MainWindow::begin_capture()
   conceal_for_record();
 }
 
+void MainWindow::ensure_stop_chip()
+{
+  if (chip_)
+    return;
+  chip_ = new StopChip();
+  if (auto app = get_application())
+    app->add_window(*chip_);
+  chip_->signal_stop().connect(sigc::mem_fun(*this, &MainWindow::on_stop));
+}
+
 void MainWindow::conceal_for_record()
 {
   if (!hide_win_.get_active())
@@ -431,15 +449,24 @@ void MainWindow::conceal_for_record()
   hidden_for_record_ = true;
   hold_app();
   iconify();
-  hide();
+  ensure_stop_chip();
+  chip_->set_elapsed(elapsed_.get_text());
+  chip_->show_all();
+  chip_->present();
+  Glib::signal_idle().connect_once([this]() {
+    if (chip_)
+      chip_->place_corner();
+  });
+  status_.set_text(status_.get_text() + " — Stop: floating button, taskbar, or Ctrl+.");
 }
 
 void MainWindow::reveal_after_record()
 {
+  if (chip_)
+    chip_->hide();
   if (!hidden_for_record_)
     return;
   hidden_for_record_ = false;
-  show();
   deiconify();
   present();
   release_app();
@@ -463,7 +490,10 @@ void MainWindow::on_error(const Glib::ustring& msg)
 bool MainWindow::on_tick()
 {
   ++seconds_;
-  elapsed_.set_text(mmss(seconds_));
+  const Glib::ustring t = mmss(seconds_);
+  elapsed_.set_text(t);
+  if (chip_ && chip_->get_visible())
+    chip_->set_elapsed(t);
   return true;
 }
 

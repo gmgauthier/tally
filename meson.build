@@ -40,6 +40,7 @@ executable(
   'src/audio_devices.cpp',
   'src/settings.cpp',
   'src/x11_windows.cpp',
+  'src/stop_chip.cpp',
   include_directories: inc,
   dependencies: [gtkmm, x11],
   install: true,

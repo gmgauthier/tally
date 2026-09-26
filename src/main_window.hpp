@@ -7,6 +7,7 @@
 #include "preview.hpp"
 #include "region_pick.hpp"
 #include "settings.hpp"
+#include "stop_chip.hpp"
 
 #include <gtkmm.h>
 
@@ -51,6 +52,7 @@ class MainWindow : public Gtk::Window {
   void begin_capture();
   void conceal_for_record();
   void reveal_after_record();
+  void ensure_stop_chip();
   AudioDevice selected_device() const;
   int selected_fps() const;
 
@@ -84,6 +86,7 @@ class MainWindow : public Gtk::Window {
   Settings settings_;
   std::vector<AudioDevice> devices_;
   RegionPick* picker_ = nullptr;
+  StopChip* chip_ = nullptr;
   Rect last_rect_{};
   std::string save_path_;
   sigc::connection tick_;
