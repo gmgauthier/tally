@@ -1,12 +1,12 @@
 # Tally backlog
 
-Current release: **v0.1.0**. Last updated: 2026-09-26.
+Current release: **v0.2.0**. Last updated: 2026-09-26.
 
 HyperCam-shaped screen recorder. Binary `tally`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
 ## High Priority
 
-None. M2 (hide while recording, default folder, remembered audio/format/FPS) is in this branch.
+None.
 
 ## Low Priority
 
@@ -25,5 +25,7 @@ None. M2 (hide while recording, default folder, remembered audio/format/FPS) is 
 - Peek / SimpleScreenRecorder re-theme
 
 ## Shipped
+
+**v0.2.0** — M2: hide while recording, FPS, default folder, persist audio source / format / FPS.
 
 **v0.1.0** — Window, full-screen / region / window `x11grab`, optional mic with device combo, WebM or AVI, `.deb` / tarball / AppImage.

@@ -1,3 +1,10 @@
+tally (0.2.0-1) unstable; urgency=medium
+
+  * M2: hide while recording, FPS, default folder, persist audio source
+    and format, README screenshot.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Sat, 26 Sep 2026 19:30:00 +0100
+
 tally (0.1.0-1) unstable; urgency=medium
 
   * Initial package. gtkmm-3 HyperCam-shaped screen recorder for LCOS

@@ -12,7 +12,7 @@ Engine: ffmpeg `x11grab` on XLibre. Face: gtkmm. Peek / SimpleScreenRecorder loo
 
 ## Status (2026-09-26)
 
-**v0.1.0.** Window plus full-screen / region / window capture to WebM or AVI. Optional audio source with a device combo (Pulse then ALSA; Default / Internal microphone if none). Packaged.
+**v0.2.0.** Window plus full-screen / region / window capture to WebM or AVI. Optional audio source with a device combo (Pulse then ALSA; Default / Internal microphone if none). FPS, default folder, hide while recording. Packaged.
 
 ## 1. Locked decisions
 
@@ -78,11 +78,11 @@ Full screen, region, and window via ffmpeg `x11grab`. Optional mic. WebM or AVI.
 
 ### M2 — Chrome polish
 
-FPS control, default folder + audio source + format + FPS in `~/.config/tally/tally.ini`, hide-this-window while recording (default on: withdraw the window, hold the Gtk application, floating Stop chip), README screenshot. **Done in this branch.**
+FPS control, default folder + audio source + format + FPS in `~/.config/tally/tally.ini`, hide-this-window while recording (default on: withdraw the window, hold the Gtk application, floating Stop chip), README screenshot. **Shipped in v0.2.0.**
 
 ### M3 — Package
 
-`debian/` (Depends: ffmpeg), `scripts/release.sh`. Tag `v0.1.0`.
+`debian/` (Depends: ffmpeg), `scripts/release.sh`. **Shipped in v0.1.0.**
 
 ## 5. Parked
 
