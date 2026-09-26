@@ -1,0 +1,19 @@
+/* Tally lcos skin — GTK3 CSS.
+ * Decorations stay with Clearlooks / Phenix. We only tint the client.
+ */
+
+window.tally-window {
+  background-color: #D4D0C8;
+}
+
+.tally-lamp-off {
+  background-color: #404040;
+}
+
+.tally-lamp-on {
+  background-color: #C01010;
+}
+
+.tally-record {
+  font-weight: bold;
+}

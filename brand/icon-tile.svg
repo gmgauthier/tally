@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Tally">
+  <rect x="2" y="2" width="60" height="60" rx="10" fill="#0B1D38"/>
+  <rect x="14" y="18" width="36" height="24" fill="#C0C0C0" stroke="#808080"/>
+  <rect x="18" y="22" width="28" height="16" fill="#102010"/>
+  <circle cx="32" cy="48" r="7" fill="#C01010"/>
+  <circle cx="32" cy="48" r="3" fill="#FF6666"/>
+</svg>

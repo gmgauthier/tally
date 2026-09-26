@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Tally
+Comment=A HyperCam-shaped screen recorder for The Lunduke Computer Operating System
+Exec=tally
+Icon=tally
+Terminal=false
+Hidden=false
+Categories=GTK;AudioVideo;Video;
+StartupWMClass=tally
+StartupNotify=true
