@@ -128,8 +128,6 @@ MainWindow::~MainWindow()
     picker_ = nullptr;
   }
   if (chip_) {
-    if (auto app = get_application())
-      app->remove_window(*chip_);
     delete chip_;
     chip_ = nullptr;
   }
@@ -437,8 +435,7 @@ void MainWindow::ensure_stop_chip()
   if (chip_)
     return;
   chip_ = new StopChip();
-  if (auto app = get_application())
-    app->add_window(*chip_);
+  /* Not an application window: presenting it must not restore the main window. */
   chip_->signal_stop().connect(sigc::mem_fun(*this, &MainWindow::on_stop));
 }
 
@@ -448,16 +445,14 @@ void MainWindow::conceal_for_record()
     return;
   hidden_for_record_ = true;
   hold_app();
-  iconify();
   ensure_stop_chip();
   chip_->set_elapsed(elapsed_.get_text());
   chip_->show_all();
-  chip_->present();
   Glib::signal_idle().connect_once([this]() {
-    if (chip_)
+    if (chip_ && chip_->get_visible())
       chip_->place_corner();
   });
-  status_.set_text(status_.get_text() + " — Stop: floating button, taskbar, or Ctrl+.");
+  hide();
 }
 
 void MainWindow::reveal_after_record()
@@ -467,6 +462,7 @@ void MainWindow::reveal_after_record()
   if (!hidden_for_record_)
     return;
   hidden_for_record_ = false;
+  show();
   deiconify();
   present();
   release_app();
@@ -485,6 +481,7 @@ void MainWindow::on_stopped()
 void MainWindow::on_error(const Glib::ustring& msg)
 {
   status_.set_text(msg);
+  reveal_after_record();
 }
 
 bool MainWindow::on_tick()
