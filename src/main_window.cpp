@@ -305,8 +305,13 @@ void MainWindow::start_pick(RegionPick::Mode mode)
           picker_->signal_cancelled().connect(sigc::mem_fun(*this, &MainWindow::on_region_cancel));
         }
         std::vector<ClientWin> wins;
-        if (mode == RegionPick::Mode::window)
-          wins = list_client_windows(window_xid(*this));
+        if (mode == RegionPick::Mode::window) {
+          try {
+            wins = list_client_windows(window_xid(*this));
+          } catch (const std::exception&) {
+            wins.clear();
+          }
+        }
         picker_->begin(pix, mode, wins);
         picker_->present();
         picker_->grab_focus();

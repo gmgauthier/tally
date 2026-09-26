@@ -3,13 +3,37 @@
 #include "x11_windows.hpp"
 
 #include <gdk/gdkx.h>
+#include <glib.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 
+#include <algorithm>
 #include <cstring>
+#include <exception>
+#include <string>
 
 namespace tally {
 namespace {
+
+Glib::ustring utf8_from_bytes(const char* p, unsigned long nbytes)
+{
+  if (!p || nbytes == 0)
+    return {};
+  if (nbytes > 2048)
+    nbytes = 2048;
+  std::string raw(p, static_cast<std::size_t>(nbytes));
+  while (!raw.empty() && raw.back() == '\0')
+    raw.pop_back();
+  if (raw.empty())
+    return {};
+  if (!g_utf8_validate(raw.data(), static_cast<gssize>(raw.size()), nullptr)) {
+    gchar* valid = g_utf8_make_valid(raw.data(), static_cast<gssize>(raw.size()));
+    Glib::ustring t(valid ? valid : "");
+    g_free(valid);
+    return t;
+  }
+  return Glib::ustring(raw.c_str());
+}
 
 Glib::ustring window_title(Display* dpy, Window w)
 {
@@ -21,10 +45,10 @@ Glib::ustring window_title(Display* dpy, Window w)
     unsigned long n = 0;
     unsigned long bytes = 0;
     unsigned char* data = nullptr;
-    if (XGetWindowProperty(dpy, w, net, 0, 1024, False, utf8, &actual, &fmt, &n, &bytes, &data) ==
+    if (XGetWindowProperty(dpy, w, net, 0, 256, False, utf8, &actual, &fmt, &n, &bytes, &data) ==
             Success &&
-        data && n > 0) {
-      Glib::ustring t(reinterpret_cast<char*>(data), n);
+        data && n > 0 && fmt == 8) {
+      Glib::ustring t = utf8_from_bytes(reinterpret_cast<char*>(data), n);
       XFree(data);
       if (!t.empty())
         return t;
@@ -34,7 +58,7 @@ Glib::ustring window_title(Display* dpy, Window w)
   }
   char* name = nullptr;
   if (XFetchName(dpy, w, &name) && name) {
-    Glib::ustring t(name);
+    Glib::ustring t = utf8_from_bytes(name, std::strlen(name));
     XFree(name);
     return t;
   }
@@ -153,33 +177,38 @@ std::vector<ClientWin> list_client_windows(unsigned long skip_xid)
       XFree(data);
     return out;
   }
+  const unsigned long count = std::min(n, 512UL);
   const auto* wins = reinterpret_cast<Window*>(data);
-  for (unsigned long i = 0; i < n; ++i) {
-    if (skip_xid && wins[i] == skip_xid)
+  for (unsigned long i = 0; i < count; ++i) {
+    try {
+      if (skip_xid && wins[i] == skip_xid)
+        continue;
+      if (skip_type(dpy, wins[i]))
+        continue;
+      XWindowAttributes attr;
+      std::memset(&attr, 0, sizeof(attr));
+      if (!XGetWindowAttributes(dpy, wins[i], &attr) || attr.map_state != IsViewable)
+        continue;
+      Window child = None;
+      int x = 0;
+      int y = 0;
+      XTranslateCoordinates(dpy, wins[i], root, 0, 0, &x, &y, &child);
+      ClientWin cw;
+      cw.xid = wins[i];
+      cw.r.x = x;
+      cw.r.y = y;
+      cw.r.w = attr.width;
+      cw.r.h = attr.height;
+      add_frame_extents(dpy, wins[i], cw.r);
+      if (cw.r.w < 32 || cw.r.h < 32)
+        continue;
+      cw.title = window_title(dpy, wins[i]);
+      if (cw.title.empty())
+        cw.title = Glib::ustring::compose("%1x%2", cw.r.w, cw.r.h);
+      out.push_back(cw);
+    } catch (const std::exception&) {
       continue;
-    if (skip_type(dpy, wins[i]))
-      continue;
-    XWindowAttributes attr;
-    std::memset(&attr, 0, sizeof(attr));
-    if (!XGetWindowAttributes(dpy, wins[i], &attr) || attr.map_state != IsViewable)
-      continue;
-    Window child = None;
-    int x = 0;
-    int y = 0;
-    XTranslateCoordinates(dpy, wins[i], root, 0, 0, &x, &y, &child);
-    ClientWin cw;
-    cw.xid = wins[i];
-    cw.r.x = x;
-    cw.r.y = y;
-    cw.r.w = attr.width;
-    cw.r.h = attr.height;
-    add_frame_extents(dpy, wins[i], cw.r);
-    if (cw.r.w < 32 || cw.r.h < 32)
-      continue;
-    cw.title = window_title(dpy, wins[i]);
-    if (cw.title.empty())
-      cw.title = Glib::ustring::compose("%1×%2", cw.r.w, cw.r.h);
-    out.push_back(cw);
+    }
   }
   XFree(data);
   return out;
