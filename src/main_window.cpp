@@ -124,6 +124,11 @@ MainWindow::~MainWindow()
     tick_.disconnect();
   drop_picker();
   drop_chip();
+  if (held_) {
+    held_ = false;
+    if (auto app = get_application())
+      app->release();
+  }
 }
 
 void MainWindow::load_css()
@@ -300,6 +305,12 @@ CaptureOpts MainWindow::current_opts() const
 
 void MainWindow::withdraw_main()
 {
+  if (!held_) {
+    if (auto app = get_application()) {
+      app->hold();
+      held_ = true;
+    }
+  }
   hide();
 }
 
@@ -307,6 +318,11 @@ void MainWindow::restore_main()
 {
   show();
   present();
+  if (held_) {
+    if (auto app = get_application())
+      app->release();
+    held_ = false;
+  }
 }
 
 void MainWindow::drop_picker()
@@ -325,9 +341,9 @@ void MainWindow::drop_chip()
 {
   if (!chip_)
     return;
+  if (chip_mapped_.connected())
+    chip_mapped_.disconnect();
   chip_->hide();
-  if (auto app = get_application())
-    app->remove_window(*chip_);
   delete chip_;
   chip_ = nullptr;
 }
@@ -449,8 +465,6 @@ void MainWindow::ensure_stop_chip()
     if (auto gdk = chip_->get_window())
       gdk_window_set_group(gdk->gobj(), gdk->gobj());
   });
-  if (auto app = get_application())
-    app->add_window(*chip_);
 }
 
 void MainWindow::conceal_for_record()
@@ -460,24 +474,27 @@ void MainWindow::conceal_for_record()
   hidden_for_record_ = true;
   ensure_stop_chip();
   chip_->set_elapsed(elapsed_.get_text());
+  if (!chip_mapped_.connected()) {
+    chip_mapped_ = chip_->signal_map().connect([this]() {
+      if (hidden_for_record_ && get_visible())
+        withdraw_main();
+    });
+  }
   chip_->show_all();
   Glib::signal_idle().connect_once([this]() {
     if (chip_ && chip_->get_visible())
       chip_->place_corner();
+    if (hidden_for_record_ && get_visible())
+      withdraw_main();
   });
-  withdraw_main();
 }
 
 void MainWindow::reveal_after_record()
 {
-  /* Restore Tally before removing the chip. The chip is the mapped
-   * application window while we are hidden; deleting it first quits the app
-   * and orphans ffmpeg. */
-  if (hidden_for_record_) {
-    hidden_for_record_ = false;
-    restore_main();
-  }
-  Glib::signal_idle().connect_once([this]() { drop_chip(); });
+  hidden_for_record_ = false;
+  if (chip_)
+    chip_->hide();
+  restore_main();
 }
 
 void MainWindow::on_stopped()
@@ -557,11 +574,15 @@ void MainWindow::on_quit()
   drop_picker();
   if (cap_.running())
     cap_.kill_now();
-  auto app = get_application();
-  if (app)
-    app->remove_window(*this);
-  if (app)
-    app->quit();
+  if (held_) {
+    if (auto app = get_application())
+      app->release();
+    held_ = false;
+  }
+  /* GtkApplication::quit() does not return from run() while a window still
+   * exists; hide-to-delete fights Hide-while-recording. End the process
+   * after ffmpeg is reaped. */
+  std::exit(0);
 }
 
 bool MainWindow::on_delete_event(GdkEventAny*)

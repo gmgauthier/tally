@@ -64,14 +64,7 @@ void Application::on_activate()
 
   auto* win = new MainWindow();
   add_window(*win);
-  win->signal_hide().connect([win]() {
-    if (win->keep_alive())
-      return;
-    auto app = win->get_application();
-    delete win;
-    if (app)
-      app->quit();
-  });
+  /* Do not destroy the window on hide — Hide-while-recording uses hide(). */
   win->present();
 }
 

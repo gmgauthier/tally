@@ -95,9 +95,12 @@ class MainWindow : public Gtk::Window {
   Rect last_rect_{};
   std::string save_path_;
   sigc::connection tick_;
+  sigc::connection chip_mapped_;
+  sigc::connection main_mapped_;
   int seconds_ = 0;
   bool picking_ = false;
   bool hidden_for_record_ = false;
+  bool held_ = false;
 };
 
 }  // namespace tally

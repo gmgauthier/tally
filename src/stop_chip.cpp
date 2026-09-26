@@ -53,6 +53,7 @@ void StopChip::place_corner()
 
 bool StopChip::on_delete_event(GdkEventAny*)
 {
+  /* Closing the chip must not destroy it; Stop is the only way out. */
   signal_stop_.emit();
   return true;
 }

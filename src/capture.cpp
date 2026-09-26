@@ -135,6 +135,12 @@ bool Capture::start(const CaptureOpts& opts)
     return false;
   }
   const auto argv = build_argv(opts);
+  {
+    std::string line = "tally: ffmpeg";
+    for (const auto& a : argv)
+      line += " " + a;
+    g_message("%s", line.c_str());
+  }
   path_ = opts.path;
   stdin_fd_ = -1;
   pid_ = 0;
