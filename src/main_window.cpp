@@ -444,6 +444,10 @@ void MainWindow::conceal_for_record()
   if (!hide_win_.get_active())
     return;
   hidden_for_record_ = true;
+  /* GtkApplication quits when the last application window unmaps. The chip
+   * is not an application window (so it cannot restore the main one). hold()
+   * keeps the process alive until Stop. */
+  hold_app();
   ensure_stop_chip();
   chip_->set_elapsed(elapsed_.get_text());
   chip_->show_all();
@@ -456,17 +460,24 @@ void MainWindow::conceal_for_record()
 
 void MainWindow::reveal_after_record()
 {
+  if (!hidden_for_record_) {
+    if (chip_) {
+      chip_->hide();
+      delete chip_;
+      chip_ = nullptr;
+    }
+    return;
+  }
+  hidden_for_record_ = false;
+  show();
+  deiconify();
+  present();
   if (chip_) {
     chip_->hide();
     delete chip_;
     chip_ = nullptr;
   }
-  if (!hidden_for_record_)
-    return;
-  hidden_for_record_ = false;
-  show();
-  deiconify();
-  present();
+  release_app();
 }
 
 void MainWindow::on_stopped()
