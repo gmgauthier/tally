@@ -7,6 +7,6 @@
 namespace tally {
 
 std::string find_data_file(const std::string& relative);
-std::string default_output_path(const std::string& ext);
+std::string default_output_path(const std::string& ext, const std::string& dir = {});
 
 }  // namespace tally

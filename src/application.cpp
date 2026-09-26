@@ -65,7 +65,7 @@ void Application::on_activate()
   auto* win = new MainWindow();
   add_window(*win);
   win->signal_hide().connect([win]() {
-    if (win->picking())
+    if (win->keep_alive())
       return;
     delete win;
   });

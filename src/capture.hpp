@@ -21,6 +21,7 @@ struct CaptureOpts {
   bool mic = false;
   AudioDevice audio;
   Format format = Format::webm;
+  int fps = 10;
   std::string path;
 };
 

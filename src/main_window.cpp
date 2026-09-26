@@ -7,6 +7,7 @@
 
 #include <gdk/gdk.h>
 
+#include <cstdlib>
 #include <cstdio>
 #include <iostream>
 
@@ -54,6 +55,14 @@ MainWindow::MainWindow()
   format_.append("webm", "WebM (VP8)");
   format_.append("avi", "AVI (MJPEG)");
   format_.set_active_id("webm");
+  fps_.append("5", "5");
+  fps_.append("10", "10");
+  fps_.append("15", "15");
+  fps_.append("30", "30");
+  fps_.set_active_id("10");
+  fps_row_.pack_start(fps_lab_, Gtk::PACK_SHRINK);
+  fps_row_.pack_start(fps_, Gtk::PACK_EXPAND_WIDGET);
+  hide_win_.set_active(true);
   device_.set_hexpand(true);
 
   left_.set_border_width(8);
@@ -73,6 +82,8 @@ MainWindow::MainWindow()
   right_.pack_start(mic_, Gtk::PACK_SHRINK);
   right_.pack_start(device_, Gtk::PACK_SHRINK);
   right_.pack_start(format_, Gtk::PACK_SHRINK);
+  right_.pack_start(fps_row_, Gtk::PACK_SHRINK);
+  right_.pack_start(hide_win_, Gtk::PACK_SHRINK);
   right_.pack_start(elapsed_, Gtk::PACK_SHRINK);
 
   well_.pack_start(left_, Gtk::PACK_EXPAND_WIDGET);
@@ -84,12 +95,19 @@ MainWindow::MainWindow()
   cap_.signal_error().connect(sigc::mem_fun(*this, &MainWindow::on_error));
   mic_.signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::persist_audio));
   device_.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::persist_audio));
+  format_.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::persist_capture));
+  fps_.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::persist_capture));
+  hide_win_.signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::persist_capture));
 
   root_.pack_start(menubar_, Gtk::PACK_SHRINK);
   root_.pack_start(well_, Gtk::PACK_SHRINK);
   add(root_);
   settings_.load();
   mic_.set_active(settings_.mic);
+  hide_win_.set_active(settings_.hide_window);
+  if (settings_.format == "avi" || settings_.format == "webm")
+    format_.set_active_id(settings_.format);
+  fps_.set_active_id(Glib::ustring::compose("%1", settings_.fps));
   fill_devices();
   refresh_preview();
   show_all();
@@ -247,6 +265,24 @@ void MainWindow::persist_audio()
   device_.set_sensitive(mic_.get_active() && !cap_.running());
 }
 
+void MainWindow::persist_capture()
+{
+  settings_.format = format_.get_active_id().raw();
+  if (settings_.format.empty())
+    settings_.format = "webm";
+  settings_.fps = selected_fps();
+  settings_.hide_window = hide_win_.get_active();
+  settings_.save();
+}
+
+int MainWindow::selected_fps() const
+{
+  const int n = std::atoi(fps_.get_active_id().c_str());
+  if (n == 5 || n == 10 || n == 15 || n == 30)
+    return n;
+  return 10;
+}
+
 CaptureOpts MainWindow::current_opts() const
 {
   CaptureOpts o;
@@ -254,7 +290,8 @@ CaptureOpts MainWindow::current_opts() const
   o.mic = mic_.get_active();
   o.audio = selected_device();
   o.format = format_.get_active_id() == "avi" ? Format::avi : Format::webm;
-  o.path = save_path_.empty() ? default_output_path(ext()) : save_path_;
+  o.fps = selected_fps();
+  o.path = save_path_.empty() ? default_output_path(ext(), settings_.last_folder) : save_path_;
   return o;
 }
 
@@ -340,19 +377,7 @@ void MainWindow::on_record()
     start_pick(RegionPick::Mode::window);
     return;
   }
-  auto opts = current_opts();
-  save_path_ = opts.path;
-  refresh_preview();
-  if (!cap_.start(opts))
-    return;
-  seconds_ = 0;
-  elapsed_.set_text("0:00");
-  set_lamp(true);
-  sync_buttons();
-  status_.set_text("Recording " + Glib::path_get_basename(opts.path));
-  if (tick_.connected())
-    tick_.disconnect();
-  tick_ = Glib::signal_timeout().connect(sigc::mem_fun(*this, &MainWindow::on_tick), 1000);
+  begin_capture();
 }
 
 void MainWindow::on_region(Rect r)
@@ -362,19 +387,7 @@ void MainWindow::on_region(Rect r)
   deiconify();
   present();
   last_rect_ = r;
-  auto opts = current_opts();
-  save_path_ = opts.path;
-  refresh_preview();
-  if (!cap_.start(opts))
-    return;
-  seconds_ = 0;
-  elapsed_.set_text("0:00");
-  set_lamp(true);
-  sync_buttons();
-  status_.set_text("Recording " + Glib::path_get_basename(opts.path));
-  if (tick_.connected())
-    tick_.disconnect();
-  tick_ = Glib::signal_timeout().connect(sigc::mem_fun(*this, &MainWindow::on_tick), 1000);
+  begin_capture();
 }
 
 void MainWindow::on_region_cancel()
@@ -392,6 +405,46 @@ void MainWindow::on_stop()
   status_.set_text("Stopping…");
 }
 
+void MainWindow::begin_capture()
+{
+  persist_capture();
+  auto opts = current_opts();
+  save_path_ = opts.path;
+  refresh_preview();
+  if (!cap_.start(opts))
+    return;
+  seconds_ = 0;
+  elapsed_.set_text("0:00");
+  set_lamp(true);
+  sync_buttons();
+  status_.set_text("Recording " + Glib::path_get_basename(opts.path));
+  if (tick_.connected())
+    tick_.disconnect();
+  tick_ = Glib::signal_timeout().connect(sigc::mem_fun(*this, &MainWindow::on_tick), 1000);
+  conceal_for_record();
+}
+
+void MainWindow::conceal_for_record()
+{
+  if (!hide_win_.get_active())
+    return;
+  hidden_for_record_ = true;
+  hold_app();
+  iconify();
+  hide();
+}
+
+void MainWindow::reveal_after_record()
+{
+  if (!hidden_for_record_)
+    return;
+  hidden_for_record_ = false;
+  show();
+  deiconify();
+  present();
+  release_app();
+}
+
 void MainWindow::on_stopped()
 {
   if (tick_.connected())
@@ -399,6 +452,7 @@ void MainWindow::on_stopped()
   set_lamp(false);
   sync_buttons();
   status_.set_text("Saved " + Glib::path_get_basename(cap_.path()));
+  reveal_after_record();
 }
 
 void MainWindow::on_error(const Glib::ustring& msg)
@@ -432,6 +486,8 @@ void MainWindow::sync_buttons()
   mic_.set_sensitive(!run);
   device_.set_sensitive(!run && mic_.get_active());
   format_.set_sensitive(!run);
+  fps_.set_sensitive(!run);
+  hide_win_.set_sensitive(!run);
 }
 
 void MainWindow::on_save_as()
@@ -440,10 +496,15 @@ void MainWindow::on_save_as()
   dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
   dlg.add_button("_Save", Gtk::RESPONSE_ACCEPT);
   dlg.set_do_overwrite_confirmation(true);
-  dlg.set_current_name(Glib::path_get_basename(default_output_path(ext())));
+  if (!settings_.last_folder.empty() &&
+      Glib::file_test(settings_.last_folder, Glib::FILE_TEST_IS_DIR))
+    dlg.set_current_folder(settings_.last_folder);
+  dlg.set_current_name(Glib::path_get_basename(default_output_path(ext(), settings_.last_folder)));
   if (dlg.run() != Gtk::RESPONSE_ACCEPT)
     return;
   save_path_ = dlg.get_filename();
+  settings_.last_folder = Glib::path_get_dirname(save_path_);
+  persist_capture();
   status_.set_text("Next capture: " + Glib::path_get_basename(save_path_));
 }
 

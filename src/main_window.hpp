@@ -18,9 +18,9 @@ class MainWindow : public Gtk::Window {
  public:
   MainWindow();
   ~MainWindow() override;
-  bool picking() const
+  bool keep_alive() const
   {
-    return picking_;
+    return picking_ || hidden_for_record_;
   }
 
  private:
@@ -47,7 +47,12 @@ class MainWindow : public Gtk::Window {
   std::string ext() const;
   void fill_devices();
   void persist_audio();
+  void persist_capture();
+  void begin_capture();
+  void conceal_for_record();
+  void reveal_after_record();
   AudioDevice selected_device() const;
+  int selected_fps() const;
 
   Gtk::MenuItem* add_item(Gtk::Menu& menu, const Glib::ustring& label,
                           const sigc::slot<void()>& slot, guint key = 0,
@@ -68,6 +73,10 @@ class MainWindow : public Gtk::Window {
   Gtk::CheckButton mic_{"Microphone"};
   Gtk::ComboBoxText device_;
   Gtk::ComboBoxText format_;
+  Gtk::Box fps_row_{Gtk::ORIENTATION_HORIZONTAL, 6};
+  Gtk::Label fps_lab_{"FPS"};
+  Gtk::ComboBoxText fps_;
+  Gtk::CheckButton hide_win_{"Hide this window"};
   Gtk::Label elapsed_{"0:00"};
   Gtk::Label status_{"Ready"};
   Glib::RefPtr<Gtk::AccelGroup> accel_;
@@ -80,6 +89,7 @@ class MainWindow : public Gtk::Window {
   sigc::connection tick_;
   int seconds_ = 0;
   bool picking_ = false;
+  bool hidden_for_record_ = false;
   bool held_ = false;
 };
 

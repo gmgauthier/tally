@@ -41,9 +41,11 @@ std::string find_data_file(const std::string& relative)
   return {};
 }
 
-std::string default_output_path(const std::string& ext)
+std::string default_output_path(const std::string& ext, const std::string& dir_in)
 {
-  std::string dir = Glib::build_filename(Glib::get_home_dir(), "Videos");
+  std::string dir = dir_in;
+  if (dir.empty() || !Glib::file_test(dir, Glib::FILE_TEST_IS_DIR))
+    dir = Glib::build_filename(Glib::get_home_dir(), "Videos");
   if (!Glib::file_test(dir, Glib::FILE_TEST_IS_DIR))
     dir = Glib::get_home_dir();
   std::time_t now = std::time(nullptr);

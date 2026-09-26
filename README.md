@@ -2,6 +2,8 @@
 
 **Vended by Grok Build**
 
+![Tally on LCOS](brand/screenshot.png)
+
 A **screen recorder** for The Lunduke Computer Operating System (LCOS). The window is HyperCam, not OBS.
 
 Binary: `tally`. Unlicense. Needs `ffmpeg` on PATH.
@@ -10,7 +12,7 @@ LCOS itself: [https://github.com/BryanLunduke/LCOS](https://github.com/BryanLund
 
 ## Status
 
-**v0.1.0 (M0–M1).** Full screen, region, or window to WebM/AVI. Optional microphone. See [INSTALL.md](INSTALL.md) and [DEVELOPMENT.md](DEVELOPMENT.md).
+**v0.1.0.** Full screen, region, or window to WebM/AVI. Optional microphone. M2 in this branch: hide while recording, FPS, remembered folder/format/mic. See [INSTALL.md](INSTALL.md) and [DEVELOPMENT.md](DEVELOPMENT.md).
 
 | Doc | What |
 |---|---|

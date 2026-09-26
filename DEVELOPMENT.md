@@ -76,7 +76,7 @@ Full screen, region, and window via ffmpeg `x11grab`. Optional mic. WebM or AVI.
 
 ### M2 — Chrome polish
 
-FPS control, last folder in `~/.config/tally/tally.ini`, hide-this-window while recording (default on), README screenshot.
+FPS control, last folder in `~/.config/tally/tally.ini`, hide-this-window while recording (default on), README screenshot. **Done in this branch.**
 
 ### M3 — Package
 

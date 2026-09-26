@@ -1,17 +1,15 @@
 # Tally backlog
 
-Current release: **unreleased (M0–M1 in tree)**. Last updated: 2026-09-26.
+Current release: **v0.1.0**. Last updated: 2026-09-26.
 
 HyperCam-shaped screen recorder. Binary `tally`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
 ## High Priority
 
-- Hide Tally while recording (default on)
-- Remember last folder / format / mic in `~/.config/tally/tally.ini`
+None. M2 (hide while recording, last folder/format/mic/FPS) is in this branch.
 
 ## Low Priority
 
-- FPS combo (5 / 10 / 15 / 30)
 - Mouse cursor on/off
 - Countdown (3–2–1)
 - Follow a moving window

@@ -10,6 +10,7 @@
 
 #include <cstdio>
 #include <sstream>
+#include <string>
 
 namespace tally {
 namespace {
@@ -56,8 +57,11 @@ std::vector<std::string> Capture::build_argv(const CaptureOpts& opts) const
   argv.emplace_back("-y");
   argv.emplace_back("-f");
   argv.emplace_back("x11grab");
+  int fps = opts.fps;
+  if (fps != 5 && fps != 10 && fps != 15 && fps != 30)
+    fps = 10;
   argv.emplace_back("-framerate");
-  argv.emplace_back("10");
+  argv.emplace_back(std::to_string(fps));
   argv.emplace_back("-video_size");
   argv.emplace_back(size.str());
   argv.emplace_back("-i");
