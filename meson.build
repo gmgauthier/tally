@@ -12,6 +12,7 @@ project(
 )
 
 gtkmm = dependency('gtkmm-3.0')
+x11 = dependency('x11')
 
 conf = configuration_data()
 conf.set_quoted('VERSION', meson.project_version())
@@ -38,8 +39,9 @@ executable(
   'src/region_pick.cpp',
   'src/audio_devices.cpp',
   'src/settings.cpp',
+  'src/x11_windows.cpp',
   include_directories: inc,
-  dependencies: [gtkmm],
+  dependencies: [gtkmm, x11],
   install: true,
   install_dir: get_option('bindir'),
 )

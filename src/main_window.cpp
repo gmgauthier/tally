@@ -3,6 +3,7 @@
 #include "main_window.hpp"
 #include "about_dialog.hpp"
 #include "paths.hpp"
+#include "x11_windows.hpp"
 
 #include <gdk/gdk.h>
 
@@ -250,55 +251,41 @@ CaptureOpts MainWindow::current_opts() const
   return o;
 }
 
-bool MainWindow::pick_window(Rect& out)
+void MainWindow::start_pick(RegionPick::Mode mode)
 {
-  Gtk::Dialog dlg("Choose a window", *this, true);
-  dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-  dlg.add_button("_Capture", Gtk::RESPONSE_ACCEPT);
-  auto* list = Gtk::manage(new Gtk::ListBox());
-  dlg.get_content_area()->set_border_width(8);
-  dlg.get_content_area()->pack_start(*list, Gtk::PACK_EXPAND_WIDGET);
-  struct Row {
-    Rect r;
-  };
-  std::vector<Row> rows;
-  GdkScreen* gs = gdk_screen_get_default();
-  GList* wins = gs ? gdk_screen_get_toplevel_windows(gs) : nullptr;
-  GdkWindow* self = get_window() ? get_window()->gobj() : nullptr;
-  for (GList* l = wins; l; l = l->next) {
-    auto* gw = static_cast<GdkWindow*>(l->data);
-    if (!gw || gw == self)
-      continue;
-    if (!gdk_window_is_visible(gw))
-      continue;
-    if (gdk_window_get_window_type(gw) != GDK_WINDOW_TOPLEVEL)
-      continue;
-    Rect r;
-    gdk_window_get_origin(gw, &r.x, &r.y);
-    r.w = gdk_window_get_width(gw);
-    r.h = gdk_window_get_height(gw);
-    if (r.w < 32 || r.h < 32)
-      continue;
-    Row row{r};
-    auto* lab = Gtk::manage(new Gtk::Label(
-        Glib::ustring::compose("%1×%2 at %3,%4", r.w, r.h, r.x, r.y), Gtk::ALIGN_START));
-    list->append(*lab);
-    rows.push_back(row);
-  }
-  if (wins)
-    g_list_free(wins);
-  dlg.set_default_size(280, 240);
-  dlg.show_all();
-  if (dlg.run() != Gtk::RESPONSE_ACCEPT)
-    return false;
-  auto* sel = list->get_selected_row();
-  if (!sel)
-    return false;
-  const int i = sel->get_index();
-  if (i < 0 || static_cast<size_t>(i) >= rows.size())
-    return false;
-  out = rows[static_cast<size_t>(i)].r;
-  return true;
+  hide();
+  if (auto dpy = Gdk::Display::get_default())
+    dpy->sync();
+  Glib::signal_timeout().connect(
+      [this, mode]() {
+        if (auto dpy = Gdk::Display::get_default())
+          dpy->sync();
+        auto pix = snapshot_desktop();
+        if (!pix) {
+          present();
+          status_.set_text("Could not snapshot the desktop");
+          return false;
+        }
+        if (!picker_) {
+          picker_ = new RegionPick();
+          picker_->signal_picked().connect(sigc::mem_fun(*this, &MainWindow::on_region));
+          picker_->signal_cancelled().connect(sigc::mem_fun(*this, &MainWindow::on_region_cancel));
+        }
+        std::vector<ClientWin> wins;
+        if (mode == RegionPick::Mode::window)
+          wins = list_client_windows(window_xid(*this));
+        picker_->begin(pix, mode, wins);
+        picker_->present();
+        picker_->grab_focus();
+        if (auto gdk = picker_->get_window()) {
+          auto cur = Gdk::Cursor::create(gdk->get_display(), Gdk::CROSSHAIR);
+          gdk->set_cursor(cur);
+        }
+        if (mode == RegionPick::Mode::window && wins.empty())
+          status_.set_text("No windows to pick");
+        return false;
+      },
+      80);
 }
 
 void MainWindow::on_record()
@@ -309,20 +296,11 @@ void MainWindow::on_record()
   if (src_full_.get_active()) {
     last_rect_ = full_screen();
   } else if (src_region_.get_active()) {
-    iconify();
-    if (!picker_) {
-      picker_ = new RegionPick();
-      picker_->signal_picked().connect(sigc::mem_fun(*this, &MainWindow::on_region));
-      picker_->signal_cancelled().connect(sigc::mem_fun(*this, &MainWindow::on_region_cancel));
-    }
-    picker_->present();
-    picker_->grab_focus();
+    start_pick(RegionPick::Mode::region);
     return;
   } else if (src_window_.get_active()) {
-    Rect r;
-    if (!pick_window(r))
-      return;
-    last_rect_ = r;
+    start_pick(RegionPick::Mode::window);
+    return;
   }
   auto opts = current_opts();
   save_path_ = opts.path;
@@ -341,7 +319,6 @@ void MainWindow::on_record()
 
 void MainWindow::on_region(Rect r)
 {
-  deiconify();
   present();
   last_rect_ = r;
   auto opts = current_opts();
@@ -361,7 +338,6 @@ void MainWindow::on_region(Rect r)
 
 void MainWindow::on_region_cancel()
 {
-  deiconify();
   present();
   status_.set_text("Cancelled");
 }

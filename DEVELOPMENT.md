@@ -56,9 +56,9 @@ Help: About Tally.
 
 `Capture` spawns `ffmpeg` with `Glib::spawn_async_with_pipes`. Stop writes `q` to stdin (ffmpeg finalizes the file), SIGINT if that fails.
 
-`RegionPick` is an undecorated fullscreen overlay; click-drag a rectangle.
+`RegionPick` snapshots the desktop (so XLibre does not need a compositor), then click-drag a rectangle. The live overlay is a picture of the screen, not a dark pane.
 
-Window pick: hide Tally, next click uses the window under the pointer (`gdk_device_get_window_at_position`) and its origin/size.
+Window pick: same snapshot; hover highlights EWMH client windows (`_NET_CLIENT_LIST_STACKING`); click captures that window’s frame.
 
 Preview: a `Gdk::Pixbuf` grab of that rectangle.
 

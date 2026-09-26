@@ -4,6 +4,8 @@
 
 #include <gtkmm.h>
 
+#include <vector>
+
 namespace tally {
 
 struct Rect {
@@ -13,9 +15,21 @@ struct Rect {
   int h = 0;
 };
 
+struct ClientWin {
+  Rect r;
+  Glib::ustring title;
+  unsigned long xid = 0;
+};
+
 class RegionPick : public Gtk::Window {
  public:
+  enum class Mode { region, window };
+
   RegionPick();
+
+  void begin(const Glib::RefPtr<Gdk::Pixbuf>& desktop, Mode mode,
+             const std::vector<ClientWin>& windows);
+
   sigc::signal<void, Rect>& signal_picked()
   {
     return signal_picked_;
@@ -33,11 +47,19 @@ class RegionPick : public Gtk::Window {
   bool on_key_press_event(GdkEventKey* event) override;
 
  private:
+  const ClientWin* hit_window(int x, int y) const;
+  void finish_ok(Rect r);
+  void finish_cancel();
+
+  Mode mode_ = Mode::region;
+  Glib::RefPtr<Gdk::Pixbuf> desktop_;
+  std::vector<ClientWin> windows_;
   bool dragging_ = false;
   int x0_ = 0;
   int y0_ = 0;
   int x1_ = 0;
   int y1_ = 0;
+  int hover_ = -1;
   sigc::signal<void, Rect> signal_picked_;
   sigc::signal<void> signal_cancelled_;
 };

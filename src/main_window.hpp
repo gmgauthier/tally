@@ -36,7 +36,7 @@ class MainWindow : public Gtk::Window {
   void sync_buttons();
   void refresh_preview();
   Rect full_screen() const;
-  bool pick_window(Rect& out);
+  void start_pick(RegionPick::Mode mode);
   CaptureOpts current_opts() const;
   std::string ext() const;
   void fill_devices();
