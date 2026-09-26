@@ -45,8 +45,6 @@ class MainWindow : public Gtk::Window {
   void refresh_preview();
   Rect full_screen() const;
   void start_pick(RegionPick::Mode mode);
-  void acquire_run();
-  void release_run();
   void withdraw_main();
   void restore_main();
   void drop_picker();
@@ -100,7 +98,6 @@ class MainWindow : public Gtk::Window {
   int seconds_ = 0;
   bool picking_ = false;
   bool hidden_for_record_ = false;
-  int holds_ = 0;
 };
 
 }  // namespace tally

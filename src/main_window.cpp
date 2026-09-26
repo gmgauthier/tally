@@ -293,28 +293,8 @@ CaptureOpts MainWindow::current_opts() const
   return o;
 }
 
-void MainWindow::acquire_run()
-{
-  if (holds_ > 0)
-    return;
-  if (auto app = get_application()) {
-    app->hold();
-    holds_ = 1;
-  }
-}
-
-void MainWindow::release_run()
-{
-  if (holds_ <= 0)
-    return;
-  if (auto app = get_application())
-    app->release();
-  holds_ = 0;
-}
-
 void MainWindow::withdraw_main()
 {
-  acquire_run();
   hide();
 }
 
@@ -322,7 +302,6 @@ void MainWindow::restore_main()
 {
   show();
   present();
-  release_run();
 }
 
 void MainWindow::drop_picker()
@@ -341,6 +320,8 @@ void MainWindow::drop_chip()
   if (!chip_)
     return;
   chip_->hide();
+  if (auto app = get_application())
+    app->remove_window(*chip_);
   delete chip_;
   chip_ = nullptr;
 }
@@ -454,8 +435,15 @@ void MainWindow::ensure_stop_chip()
   if (chip_)
     return;
   chip_ = new StopChip();
-  /* Not an application window: presenting it must not restore the main window. */
   chip_->signal_stop().connect(sigc::mem_fun(*this, &MainWindow::on_stop));
+  chip_->signal_realize().connect([this]() {
+    if (!chip_)
+      return;
+    if (auto gdk = chip_->get_window())
+      gdk_window_set_group(gdk->gobj(), gdk->gobj());
+  });
+  if (auto app = get_application())
+    app->add_window(*chip_);
 }
 
 void MainWindow::conceal_for_record()
@@ -559,8 +547,10 @@ void MainWindow::on_quit()
   drop_picker();
   if (cap_.running())
     cap_.stop();
-  release_run();
-  if (auto app = get_application())
+  auto app = get_application();
+  if (app)
+    app->remove_window(*this);
+  if (app)
     app->quit();
 }
 
