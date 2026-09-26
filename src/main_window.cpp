@@ -444,7 +444,6 @@ void MainWindow::conceal_for_record()
   if (!hide_win_.get_active())
     return;
   hidden_for_record_ = true;
-  hold_app();
   ensure_stop_chip();
   chip_->set_elapsed(elapsed_.get_text());
   chip_->show_all();
@@ -457,15 +456,17 @@ void MainWindow::conceal_for_record()
 
 void MainWindow::reveal_after_record()
 {
-  if (chip_)
+  if (chip_) {
     chip_->hide();
+    delete chip_;
+    chip_ = nullptr;
+  }
   if (!hidden_for_record_)
     return;
   hidden_for_record_ = false;
   show();
   deiconify();
   present();
-  release_app();
 }
 
 void MainWindow::on_stopped()
@@ -537,8 +538,20 @@ void MainWindow::on_save_as()
 
 void MainWindow::on_quit()
 {
+  picking_ = false;
+  hidden_for_record_ = false;
+  if (tick_.connected())
+    tick_.disconnect();
+  if (chip_) {
+    chip_->hide();
+    delete chip_;
+    chip_ = nullptr;
+  }
   if (cap_.running())
     cap_.stop();
+  release_app();
+  if (auto app = get_application())
+    app->quit();
   hide();
 }
 

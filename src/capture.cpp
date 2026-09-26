@@ -34,6 +34,8 @@ Capture::Capture() = default;
 
 Capture::~Capture()
 {
+  if (child_.connected())
+    child_.disconnect();
   stop();
   reap();
 }
@@ -176,8 +178,11 @@ void Capture::on_child(GPid pid, int status)
 
 void Capture::reap()
 {
+  if (child_.connected())
+    child_.disconnect();
   if (pid_ > 0) {
     kill(pid_, SIGTERM);
+    waitpid(pid_, nullptr, WNOHANG);
     Glib::spawn_close_pid(pid_);
     pid_ = 0;
   }
