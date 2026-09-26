@@ -42,8 +42,10 @@ class MainWindow : public Gtk::Window {
   void refresh_preview();
   Rect full_screen() const;
   void start_pick(RegionPick::Mode mode);
-  void hold_app();
-  void release_app();
+  void park();
+  void unpark();
+  void drop_picker();
+  void drop_chip();
   CaptureOpts current_opts() const;
   std::string ext() const;
   void fill_devices();
@@ -93,7 +95,9 @@ class MainWindow : public Gtk::Window {
   int seconds_ = 0;
   bool picking_ = false;
   bool hidden_for_record_ = false;
-  bool held_ = false;
+  bool parked_ = false;
+  int rest_x_ = 0;
+  int rest_y_ = 0;
 };
 
 }  // namespace tally

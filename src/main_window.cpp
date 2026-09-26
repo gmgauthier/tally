@@ -118,19 +118,11 @@ MainWindow::MainWindow()
 MainWindow::~MainWindow()
 {
   picking_ = false;
-  release_app();
+  hidden_for_record_ = false;
   if (tick_.connected())
     tick_.disconnect();
-  if (picker_) {
-    if (auto app = get_application())
-      app->remove_window(*picker_);
-    delete picker_;
-    picker_ = nullptr;
-  }
-  if (chip_) {
-    delete chip_;
-    chip_ = nullptr;
-  }
+  drop_picker();
+  drop_chip();
 }
 
 void MainWindow::load_css()
@@ -301,30 +293,52 @@ CaptureOpts MainWindow::current_opts() const
   return o;
 }
 
-void MainWindow::hold_app()
+void MainWindow::park()
 {
-  if (held_)
+  if (parked_)
     return;
-  if (auto app = get_application()) {
-    app->hold();
-    held_ = true;
-  }
+  get_position(rest_x_, rest_y_);
+  parked_ = true;
+  set_skip_taskbar_hint(true);
+  set_skip_pager_hint(true);
+  move(-8000, -8000);
 }
 
-void MainWindow::release_app()
+void MainWindow::unpark()
 {
-  if (!held_)
+  if (!parked_)
     return;
+  parked_ = false;
+  set_skip_taskbar_hint(false);
+  set_skip_pager_hint(false);
+  move(rest_x_, rest_y_);
+  present();
+}
+
+void MainWindow::drop_picker()
+{
+  if (!picker_)
+    return;
+  picker_->hide();
   if (auto app = get_application())
-    app->release();
-  held_ = false;
+    app->remove_window(*picker_);
+  delete picker_;
+  picker_ = nullptr;
+}
+
+void MainWindow::drop_chip()
+{
+  if (!chip_)
+    return;
+  chip_->hide();
+  delete chip_;
+  chip_ = nullptr;
 }
 
 void MainWindow::start_pick(RegionPick::Mode mode)
 {
   picking_ = true;
-  hold_app();
-  iconify();
+  park();
   if (auto dpy = Gdk::Display::get_default())
     dpy->sync();
   Glib::signal_timeout().connect(
@@ -334,16 +348,12 @@ void MainWindow::start_pick(RegionPick::Mode mode)
         auto pix = snapshot_desktop();
         if (!pix) {
           picking_ = false;
-          release_app();
-          deiconify();
-          present();
+          unpark();
           status_.set_text("Could not snapshot the desktop");
           return false;
         }
         if (!picker_) {
           picker_ = new RegionPick();
-          if (auto app = get_application())
-            app->add_window(*picker_);
           picker_->signal_picked().connect(sigc::mem_fun(*this, &MainWindow::on_region));
           picker_->signal_cancelled().connect(sigc::mem_fun(*this, &MainWindow::on_region_cancel));
         }
@@ -356,7 +366,7 @@ void MainWindow::start_pick(RegionPick::Mode mode)
           }
         }
         picker_->begin(pix, mode, wins);
-        picker_->present();
+        picker_->show();
         picker_->grab_focus();
         if (auto gdk = picker_->get_window()) {
           auto cur = Gdk::Cursor::create(gdk->get_display(), Gdk::CROSSHAIR);
@@ -366,7 +376,7 @@ void MainWindow::start_pick(RegionPick::Mode mode)
           status_.set_text("No windows to pick");
         return false;
       },
-      200);
+      80);
 }
 
 void MainWindow::on_record()
@@ -389,19 +399,18 @@ void MainWindow::on_record()
 void MainWindow::on_region(Rect r)
 {
   picking_ = false;
-  release_app();
-  deiconify();
-  present();
+  drop_picker();
   last_rect_ = r;
   begin_capture();
+  if (!hidden_for_record_)
+    unpark();
 }
 
 void MainWindow::on_region_cancel()
 {
   picking_ = false;
-  release_app();
-  deiconify();
-  present();
+  drop_picker();
+  unpark();
   status_.set_text("Cancelled");
 }
 
@@ -444,10 +453,7 @@ void MainWindow::conceal_for_record()
   if (!hide_win_.get_active())
     return;
   hidden_for_record_ = true;
-  /* GtkApplication quits when the last application window unmaps. The chip
-   * is not an application window (so it cannot restore the main one). hold()
-   * keeps the process alive until Stop. */
-  hold_app();
+  park();
   ensure_stop_chip();
   chip_->set_elapsed(elapsed_.get_text());
   chip_->show_all();
@@ -455,29 +461,15 @@ void MainWindow::conceal_for_record()
     if (chip_ && chip_->get_visible())
       chip_->place_corner();
   });
-  hide();
 }
 
 void MainWindow::reveal_after_record()
 {
-  if (!hidden_for_record_) {
-    if (chip_) {
-      chip_->hide();
-      delete chip_;
-      chip_ = nullptr;
-    }
+  drop_chip();
+  if (!hidden_for_record_)
     return;
-  }
   hidden_for_record_ = false;
-  show();
-  deiconify();
-  present();
-  if (chip_) {
-    chip_->hide();
-    delete chip_;
-    chip_ = nullptr;
-  }
-  release_app();
+  unpark();
 }
 
 void MainWindow::on_stopped()
@@ -551,19 +543,15 @@ void MainWindow::on_quit()
 {
   picking_ = false;
   hidden_for_record_ = false;
+  parked_ = false;
   if (tick_.connected())
     tick_.disconnect();
-  if (chip_) {
-    chip_->hide();
-    delete chip_;
-    chip_ = nullptr;
-  }
+  drop_chip();
+  drop_picker();
   if (cap_.running())
     cap_.stop();
-  release_app();
   if (auto app = get_application())
     app->quit();
-  hide();
 }
 
 void MainWindow::on_about()
