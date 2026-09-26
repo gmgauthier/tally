@@ -1,0 +1,27 @@
+Source: tally
+Section: video
+Priority: optional
+Maintainer: Greg Gauthier <gmgauthier@protonmail.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ meson (>= 0.56),
+ ninja-build,
+ pkg-config,
+ g++,
+ libgtkmm-3.0-dev,
+ libx11-dev
+Standards-Version: 4.7.0
+Homepage: https://github.com/gmgauthier/tally
+Vcs-Git: https://github.com/gmgauthier/tally.git
+Vcs-Browser: https://github.com/gmgauthier/tally
+Rules-Requires-Root: no
+
+Package: tally
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ ffmpeg
+Description: HyperCam-shaped screen recorder for LCOS
+ Tally is a gtkmm-3 screen recorder: full screen, region, or window
+ via ffmpeg x11grab, optional microphone, WebM or AVI.

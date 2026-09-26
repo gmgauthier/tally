@@ -7,7 +7,7 @@ dist/
 debian/.debhelper/
 debian/debhelper-build-stamp
 debian/files
-debian/kablamo/
+debian/tally/
 debian/*.substvars
 debian/*.debhelper.log
 *.o

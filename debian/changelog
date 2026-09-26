@@ -1,0 +1,6 @@
+tally (0.1.0-1) unstable; urgency=medium
+
+  * Initial package. gtkmm-3 HyperCam-shaped screen recorder for LCOS
+    (milestones M0–M1).
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Fri, 26 Sep 2026 17:00:00 +0100

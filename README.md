@@ -10,7 +10,7 @@ LCOS itself: [https://github.com/BryanLunduke/LCOS](https://github.com/BryanLund
 
 ## Status
 
-**Unreleased (M0–M1).** Full screen, region, or window to WebM/AVI. Optional microphone. See [DEVELOPMENT.md](DEVELOPMENT.md).
+**v0.1.0 (M0–M1).** Full screen, region, or window to WebM/AVI. Optional microphone. See [INSTALL.md](INSTALL.md) and [DEVELOPMENT.md](DEVELOPMENT.md).
 
 | Doc | What |
 |---|---|

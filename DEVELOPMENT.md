@@ -12,7 +12,7 @@ Engine: ffmpeg `x11grab` on XLibre. Face: gtkmm. Peek / SimpleScreenRecorder loo
 
 ## Status (2026-09-26)
 
-**M0–M1 in tree.** Window plus full-screen / region / window capture to WebM or AVI. Optional mic with a device combo (Pulse then ALSA; Default / Internal microphone if none).
+**v0.1.0.** Window plus full-screen / region / window capture to WebM or AVI. Optional mic with a device combo (Pulse then ALSA; Default / Internal microphone if none). Packaged.
 
 ## 1. Locked decisions
 
