@@ -67,3 +67,11 @@ install_data(
   rename: 'tally.svg',
   install_dir: get_option('datadir') / 'icons' / 'hicolor' / 'scalable' / 'apps',
 )
+
+tally_tests = executable(
+  'tally-tests',
+  'tests/test_format.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm, x11],
+)
+test('format', tally_tests)
