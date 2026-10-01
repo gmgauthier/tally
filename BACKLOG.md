@@ -1,6 +1,6 @@
 # Tally backlog
 
-Current release: **v0.3.0**. Last updated: 2026-09-26.
+Current release: **v0.3.1**. Last updated: 2026-10-01.
 
 HyperCam-shaped screen recorder. Binary `tally`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
@@ -25,6 +25,8 @@ None.
 - Peek / SimpleScreenRecorder re-theme
 
 ## Shipped
+
+**v0.3.1** — Headless meson test suite, and known defects recorded in BUG-BACKLOG.md.
 
 **v0.3.0** — M4: MP4 (H.264 + AAC) and MKV (H.264 + Vorbis).
 
