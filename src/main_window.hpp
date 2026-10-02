@@ -36,7 +36,7 @@ class MainWindow : public Gtk::Window {
   void on_record();
   void on_stop();
   void on_save_as();
-  void on_stopped();
+  void on_stopped(bool saved);
   void on_error(const Glib::ustring& msg);
   void on_region(Rect r);
   void on_region_cancel();

@@ -1,7 +1,7 @@
 project(
   'tally',
   'cpp',
-  version: '0.3.2',
+  version: '0.3.3',
   license: 'Unlicense',
   meson_version: '>=0.56',
   default_options: [
@@ -86,3 +86,12 @@ next_take_tests = executable(
   dependencies: [gtkmm],
 )
 test('next-take', next_take_tests)
+
+capture_tests = executable(
+  'tally-capture-tests',
+  'tests/test_capture.cpp',
+  'src/capture.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm],
+)
+test('capture', capture_tests)

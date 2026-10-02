@@ -79,7 +79,8 @@ class Capture {
   void stop();
   void kill_now();
 
-  sigc::signal<void>& signal_stopped()
+  /* Emitted when ffmpeg exits. The flag is true only for a clean exit (status 0). */
+  sigc::signal<void, bool>& signal_stopped()
   {
     return signal_stopped_;
   }
@@ -98,7 +99,7 @@ class Capture {
   int stdin_fd_ = -1;
   std::string path_;
   sigc::connection child_;
-  sigc::signal<void> signal_stopped_;
+  sigc::signal<void, bool> signal_stopped_;
   sigc::signal<void, Glib::ustring> signal_error_;
 };
 

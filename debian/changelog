@@ -1,3 +1,9 @@
+tally (0.3.3-1) unstable; urgency=medium
+
+  * Do not report a take as saved when ffmpeg fails.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Fri, 02 Oct 2026 10:33:08 +0100
+
 tally (0.3.2-1) unstable; urgency=medium
 
   * Give every take its own file; Save As names the next take only.

@@ -12,7 +12,7 @@ LCOS itself: [https://github.com/BryanLunduke/LCOS](https://github.com/BryanLund
 
 ## Status
 
-**v0.3.2.** Full screen, region, or window to WebM, AVI, MP4, or MKV. Optional audio source, FPS, default folder, hide while recording. Headless test suite and BUG-BACKLOG.md. See [INSTALL.md](INSTALL.md) and [DEVELOPMENT.md](DEVELOPMENT.md).
+**v0.3.3.** Full screen, region, or window to WebM, AVI, MP4, or MKV. Optional audio source, FPS, default folder, hide while recording. Headless test suite and BUG-BACKLOG.md. See [INSTALL.md](INSTALL.md) and [DEVELOPMENT.md](DEVELOPMENT.md).
 
 | Doc | What |
 |---|---|
