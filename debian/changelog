@@ -1,3 +1,9 @@
+tally (0.3.4-1) unstable; urgency=medium
+
+  * Clip an off-screen capture rectangle to the X root.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Fri, 02 Oct 2026 10:35:51 +0100
+
 tally (0.3.3-1) unstable; urgency=medium
 
   * Do not report a take as saved when ffmpeg fails.

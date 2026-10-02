@@ -2,17 +2,9 @@
 
 Reviewed 2026-10-01 against the 0.3.0 sources.
 
-`meson test` runs `tests/test_format.cpp` (`format`), `tests/test_next_take.cpp` (`next-take`), and `tests/test_capture.cpp` (`capture`). `capture` runs a take against a stand-in `ffmpeg` on `PATH` and checks that a non-zero exit is an error and not saved, and that a clean exit on Stop is saved. `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, and that a Save As name is used for one take. Capture, geometry, and the stop chip need a display, so they are not in that binary. ffmpeg is spawned with an argv vector, not a shell.
+`meson test` runs `tests/test_format.cpp` (`format`), `tests/test_next_take.cpp` (`next-take`), `tests/test_capture.cpp` (`capture`), and `tests/test_geometry.cpp` (`geometry`). `geometry` checks the x11grab size and offset for a rectangle inside the root, off the left and top, past the right and bottom, and larger than the root. `capture` runs a take against a stand-in `ffmpeg` on `PATH` and checks that a non-zero exit is an error and not saved, and that a clean exit on Stop is saved. `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, and that a Save As name is used for one take. Picking a region or window, and the stop chip, need a display, so they are not in these binaries. ffmpeg is spawned with an argv vector, not a shell.
 
 ## Open
-
-### Off-screen window geometry is shifted or rejected
-
-- Severity: incorrect
-- Confidence: high
-- Where: `src/capture.cpp:55`, `src/x11_windows.cpp:117`, `src/main_window.cpp:227`
-- Trigger: Window pick of a window that hangs off the left or top, or whose `_NET_FRAME_EXTENTS` push the rectangle off that edge. The same for a rectangle that extends past the right or bottom of the X root.
-- Outcome: `build_argv` clamps a negative origin to 0 and does not shrink the width or height by the clamped amount, so the grab slides toward the bottom-right. The preview clips a local copy (`refresh_preview`), so the thumbnail can look fitted while the ffmpeg rectangle is still too big. x11grab then errors, and the previous defect reports Saved. Region drag itself stays on-screen. Negative width and height are rejected in `Capture::start` before ffmpeg.
 
 ### Full-screen recording starts before the window is hidden
 
@@ -39,6 +31,15 @@ Reviewed 2026-10-01 against the 0.3.0 sources.
 - Outcome: Both accelerators are window `AccelGroup`s. The main window is withdrawn, so it gets no keys and is not on the taskbar. The chip sets `skip_taskbar_hint` and does not take focus, so its Ctrl+. does not fire either. The control that works is clicking the chip. The tooltip says Stop is available from the taskbar or Ctrl+.
 
 ## Closed
+
+### Off-screen window geometry is shifted or rejected
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/capture.cpp` `clip_to_screen`, `ffmpeg_argv`, `src/main_window.cpp` `refresh_preview`
+- Trigger: Window pick of a window that hangs off the left or top, or whose `_NET_FRAME_EXTENTS` push the rectangle off that edge. The same for a rectangle that extends past the right or bottom of the X root.
+- Outcome: `build_argv` clamps a negative origin to 0 and does not shrink the width or height by the clamped amount, so the grab slides toward the bottom-right. The preview clips a local copy (`refresh_preview`), so the thumbnail can look fitted while the ffmpeg rectangle is still too big. x11grab then errors, and the previous defect reports Saved. Region drag itself stays on-screen. Negative width and height are rejected in `Capture::start` before ffmpeg.
+- Fixed in v0.3.4: `clip_to_screen` limits the rectangle to the X root. A negative origin moves to 0 and the width or height shrinks by the same amount, and a rectangle past the right or bottom stops at the root edge. ffmpeg and the preview get the same rectangle, and one wholly off-screen is `Nothing to capture`.
 
 ### A failed ffmpeg is reported as Saved
 

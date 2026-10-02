@@ -222,16 +222,8 @@ void MainWindow::refresh_preview()
   Rect r = last_rect_;
   if (r.w < 2 || r.h < 2)
     r = full_screen();
-  int sw = root->get_width();
-  int sh = root->get_height();
-  if (r.x < 0)
-    r.x = 0;
-  if (r.y < 0)
-    r.y = 0;
-  if (r.x + r.w > sw)
-    r.w = sw - r.x;
-  if (r.y + r.h > sh)
-    r.h = sh - r.y;
+  /* The same rectangle ffmpeg is given, so the thumbnail matches the take. */
+  r = clip_to_screen(r, root->get_width(), root->get_height());
   if (r.w < 2 || r.h < 2)
     return;
   try {
@@ -351,6 +343,9 @@ CaptureOpts MainWindow::current_opts() const
 {
   CaptureOpts o;
   o.rect = last_rect_.w >= 2 ? last_rect_ : full_screen();
+  const Rect root = full_screen();
+  o.screen_w = root.w;
+  o.screen_h = root.h;
   o.mic = mic_.get_active();
   o.audio = selected_device();
   o.format = format_from_id(format_.get_active_id().raw());

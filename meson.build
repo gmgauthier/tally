@@ -1,7 +1,7 @@
 project(
   'tally',
   'cpp',
-  version: '0.3.3',
+  version: '0.3.4',
   license: 'Unlicense',
   meson_version: '>=0.56',
   default_options: [
@@ -95,3 +95,12 @@ capture_tests = executable(
   dependencies: [gtkmm],
 )
 test('capture', capture_tests)
+
+geometry_tests = executable(
+  'tally-geometry-tests',
+  'tests/test_geometry.cpp',
+  'src/capture.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm],
+)
+test('geometry', geometry_tests)
