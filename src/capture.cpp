@@ -101,12 +101,11 @@ std::vector<std::string> ffmpeg_argv(const CaptureOpts& opts, const std::string&
   argv.emplace_back("-i");
   argv.emplace_back(src.str());
   if (opts.mic) {
-    if (opts.audio.backend == AudioBackend::alsa && !opts.audio.id.empty() &&
-        opts.audio.id != "default") {
+    if (opts.audio.backend == AudioBackend::alsa) {
       argv.emplace_back("-f");
       argv.emplace_back("alsa");
       argv.emplace_back("-i");
-      argv.emplace_back(opts.audio.id);
+      argv.emplace_back(opts.audio.id.empty() ? "default" : opts.audio.id);
     } else {
       argv.emplace_back("-f");
       argv.emplace_back("pulse");

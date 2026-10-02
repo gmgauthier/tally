@@ -1,6 +1,6 @@
 # Tally backlog
 
-Current release: **v0.3.5**. Last updated: 2026-10-02.
+Current release: **v0.3.6**. Last updated: 2026-10-02.
 
 HyperCam-shaped screen recorder. Binary `tally`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
@@ -25,6 +25,8 @@ None.
 - Peek / SimpleScreenRecorder re-theme
 
 ## Shipped
+
+**v0.3.6** — With no Pulse server, Default records from ALSA.
 
 **v0.3.5** — A full-screen take hides the Tally window before ffmpeg starts.
 

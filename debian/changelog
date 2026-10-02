@@ -1,3 +1,9 @@
+tally (0.3.6-1) unstable; urgency=medium
+
+  * Record Default from ALSA when the device list fell back to arecord.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Fri, 02 Oct 2026 10:42:30 +0100
+
 tally (0.3.5-1) unstable; urgency=medium
 
   * Hide the window before a full-screen take starts.
