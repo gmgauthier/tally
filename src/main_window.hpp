@@ -60,6 +60,7 @@ class MainWindow : public Gtk::Window {
   void on_default_folder();
   void on_dest_set();
   void begin_capture();
+  void start_capture(const CaptureOpts& opts);
   void conceal_for_record();
   void reveal_after_record();
   void ensure_stop_chip();

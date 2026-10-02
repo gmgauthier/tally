@@ -3,6 +3,7 @@
 #include "main_window.hpp"
 #include "about_dialog.hpp"
 #include "paths.hpp"
+#include "record_plan.hpp"
 #include "x11_windows.hpp"
 
 #include <gdk/gdk.h>
@@ -493,8 +494,33 @@ void MainWindow::begin_capture()
   persist_folder();
   sync_dest();
   refresh_preview();
-  if (!cap_.start(opts))
+  if (start_order(hide_win_.get_active(), get_visible()) == StartOrder::conceal_then_start) {
+    /* Full screen: withdraw this window first, so the first frames do not show it. */
+    hidden_for_record_ = true;
+    withdraw_main();
+    if (auto dpy = Gdk::Display::get_default())
+      dpy->sync();
+    Glib::signal_timeout().connect_once(
+        [this, opts]() {
+          if (auto dpy = Gdk::Display::get_default())
+            dpy->sync();
+          start_capture(opts);
+        },
+        150);
     return;
+  }
+  start_capture(opts);
+}
+
+void MainWindow::start_capture(const CaptureOpts& opts)
+{
+  if (cap_.running())
+    return;
+  if (!cap_.start(opts)) {
+    if (hidden_for_record_)
+      reveal_after_record();
+    return;
+  }
   seconds_ = 0;
   elapsed_.set_text("0:00");
   set_lamp(true);

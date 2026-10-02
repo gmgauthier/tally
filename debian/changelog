@@ -1,3 +1,9 @@
+tally (0.3.5-1) unstable; urgency=medium
+
+  * Hide the window before a full-screen take starts.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Fri, 02 Oct 2026 10:39:51 +0100
+
 tally (0.3.4-1) unstable; urgency=medium
 
   * Clip an off-screen capture rectangle to the X root.
