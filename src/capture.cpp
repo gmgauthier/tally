@@ -48,16 +48,40 @@ Capture::~Capture()
   reap();
 }
 
+Rect clip_to_screen(Rect r, int sw, int sh)
+{
+  /* Moving the origin onto the screen takes the hidden part off the size too. */
+  if (r.x < 0) {
+    r.w += r.x;
+    r.x = 0;
+  }
+  if (r.y < 0) {
+    r.h += r.y;
+    r.y = 0;
+  }
+  if (sw > 0 && r.x + r.w > sw)
+    r.w = sw - r.x;
+  if (sh > 0 && r.y + r.h > sh)
+    r.h = sh - r.y;
+  return r;
+}
+
 std::vector<std::string> Capture::build_argv(const CaptureOpts& opts) const
 {
-  const int w = even(opts.rect.w);
-  const int h = even(opts.rect.h);
-  const int x = opts.rect.x < 0 ? 0 : opts.rect.x;
-  const int y = opts.rect.y < 0 ? 0 : opts.rect.y;
+  return ffmpeg_argv(opts, display_spec());
+}
+
+std::vector<std::string> ffmpeg_argv(const CaptureOpts& opts, const std::string& display)
+{
+  const Rect r = clip_to_screen(opts.rect, opts.screen_w, opts.screen_h);
+  const int w = even(r.w);
+  const int h = even(r.h);
+  const int x = r.x;
+  const int y = r.y;
   std::ostringstream size;
   size << w << "x" << h;
   std::ostringstream src;
-  src << display_spec() << "+" << x << "," << y;
+  src << display << "+" << x << "," << y;
 
   std::vector<std::string> argv;
   argv.emplace_back("ffmpeg");
@@ -157,7 +181,8 @@ bool Capture::start(const CaptureOpts& opts)
 {
   if (running_)
     return true;
-  if (opts.path.empty() || opts.rect.w < 2 || opts.rect.h < 2) {
+  const Rect on_screen = clip_to_screen(opts.rect, opts.screen_w, opts.screen_h);
+  if (opts.path.empty() || on_screen.w < 2 || on_screen.h < 2) {
     signal_error_.emit("Nothing to capture");
     return false;
   }

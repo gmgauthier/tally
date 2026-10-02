@@ -54,12 +54,20 @@ inline bool known_format_id(const std::string& id)
 
 struct CaptureOpts {
   Rect rect;
+  int screen_w = 0; /* X root size; 0 means unknown */
+  int screen_h = 0;
   bool mic = false;
   AudioDevice audio;
   Format format = Format::webm;
   int fps = 10;
   std::string path;
 };
+
+/* RECT limited to the X root (SW x SH). A dimension of 0 means unknown and is not limited. */
+Rect clip_to_screen(Rect rect, int sw, int sh);
+
+/* ffmpeg argv for OPTS on X display DISPLAY. */
+std::vector<std::string> ffmpeg_argv(const CaptureOpts& opts, const std::string& display);
 
 class Capture {
  public:
