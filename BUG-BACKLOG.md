@@ -2,17 +2,9 @@
 
 Reviewed 2026-10-01 against the 0.3.0 sources.
 
-`meson test` runs `tests/test_format.cpp` (`format`), `tests/test_next_take.cpp` (`next-take`), `tests/test_capture.cpp` (`capture`), and `tests/test_geometry.cpp` (`geometry`). `geometry` checks the x11grab size and offset for a rectangle inside the root, off the left and top, past the right and bottom, and larger than the root. `capture` runs a take against a stand-in `ffmpeg` on `PATH` and checks that a non-zero exit is an error and not saved, and that a clean exit on Stop is saved. `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, and that a Save As name is used for one take. Picking a region or window, and the stop chip, need a display, so they are not in these binaries. ffmpeg is spawned with an argv vector, not a shell.
+`meson test` runs `tests/test_format.cpp` (`format`), `tests/test_next_take.cpp` (`next-take`), `tests/test_capture.cpp` (`capture`), `tests/test_geometry.cpp` (`geometry`), and `tests/test_record_plan.cpp` (`record-plan`). `record-plan` checks that a full-screen take with Hide this window on withdraws the window before ffmpeg starts. `geometry` checks the x11grab size and offset for a rectangle inside the root, off the left and top, past the right and bottom, and larger than the root. `capture` runs a take against a stand-in `ffmpeg` on `PATH` and checks that a non-zero exit is an error and not saved, and that a clean exit on Stop is saved. `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, and that a Save As name is used for one take. Picking a region or window, and the stop chip, need a display, so they are not in these binaries. ffmpeg is spawned with an argv vector, not a shell.
 
 ## Open
-
-### Full-screen recording starts before the window is hidden
-
-- Severity: incorrect
-- Confidence: high
-- Where: `src/main_window.cpp:508`, `src/main_window.cpp:536`
-- Trigger: Full screen (the default source) with "Hide this window" on, which is the default. Region and window mode withdraw the main window inside the picker, before `begin_capture`.
-- Outcome: `cap_.start` runs, then `conceal_for_record`. The hide waits for the Stop chip to map and for an idle callback. The first frames of a full-screen take include the Tally window.
 
 ### ALSA fallback still records with Pulse
 
@@ -31,6 +23,15 @@ Reviewed 2026-10-01 against the 0.3.0 sources.
 - Outcome: Both accelerators are window `AccelGroup`s. The main window is withdrawn, so it gets no keys and is not on the taskbar. The chip sets `skip_taskbar_hint` and does not take focus, so its Ctrl+. does not fire either. The control that works is clicking the chip. The tooltip says Stop is available from the taskbar or Ctrl+.
 
 ## Closed
+
+### Full-screen recording starts before the window is hidden
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/main_window.cpp` `begin_capture`, `start_capture`, `src/record_plan.hpp`
+- Trigger: Full screen (the default source) with "Hide this window" on, which is the default. Region and window mode withdraw the main window inside the picker, before `begin_capture`.
+- Outcome: `cap_.start` runs, then `conceal_for_record`. The hide waits for the Stop chip to map and for an idle callback. The first frames of a full-screen take include the Tally window.
+- Fixed in v0.3.5: With Hide this window on and the window showing (full screen), Tally withdraws the window, syncs the display, and starts ffmpeg 150 ms later. The Stop chip appears once recording has started. Region and window picks already withdraw the window and are unchanged.
 
 ### Off-screen window geometry is shifted or rejected
 

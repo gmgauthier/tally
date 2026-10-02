@@ -1,7 +1,7 @@
 project(
   'tally',
   'cpp',
-  version: '0.3.4',
+  version: '0.3.5',
   license: 'Unlicense',
   meson_version: '>=0.56',
   default_options: [
@@ -104,3 +104,10 @@ geometry_tests = executable(
   dependencies: [gtkmm],
 )
 test('geometry', geometry_tests)
+
+record_plan_tests = executable(
+  'tally-record-plan-tests',
+  'tests/test_record_plan.cpp',
+  include_directories: inc,
+)
+test('record-plan', record_plan_tests)
