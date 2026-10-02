@@ -7,6 +7,7 @@
 #include <glibmm.h>
 
 #include <ctime>
+#include <string>
 #include <vector>
 
 namespace tally {
@@ -58,8 +59,13 @@ std::string default_output_path(const std::string& ext, const std::string& dir_i
   localtime_r(&now, &tm);
   char stamp[32];
   std::strftime(stamp, sizeof(stamp), "%Y%m%d-%H%M%S", &tm);
-  const std::string name = std::string("tally-") + stamp + "." + ext;
-  return Glib::build_filename(default_output_dir(dir_in), name);
+  const std::string dir = default_output_dir(dir_in);
+  const std::string stem = std::string("tally-") + stamp;
+  std::string path = Glib::build_filename(dir, stem + "." + ext);
+  /* ffmpeg runs with -y: never hand it a take that is already on disk. */
+  for (int n = 2; Glib::file_test(path, Glib::FILE_TEST_EXISTS); ++n)
+    path = Glib::build_filename(dir, stem + "-" + std::to_string(n) + "." + ext);
+  return path;
 }
 
 }  // namespace tally

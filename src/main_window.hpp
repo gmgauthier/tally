@@ -4,6 +4,7 @@
 
 #include "audio_devices.hpp"
 #include "capture.hpp"
+#include "next_take.hpp"
 #include "preview.hpp"
 #include "region_pick.hpp"
 #include "settings.hpp"
@@ -100,7 +101,7 @@ class MainWindow : public Gtk::Window {
   RegionPick* picker_ = nullptr;
   StopChip* chip_ = nullptr;
   Rect last_rect_{};
-  std::string save_path_;
+  NextTake next_take_;
   sigc::connection tick_;
   sigc::connection chip_mapped_;
   sigc::connection main_mapped_;

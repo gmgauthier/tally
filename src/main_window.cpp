@@ -294,14 +294,7 @@ void MainWindow::persist_capture()
     settings_.format = fmt;
   settings_.fps = selected_fps();
   settings_.hide_window = hide_win_.get_active();
-  if (!save_path_.empty()) {
-    const std::string dir = Glib::path_get_dirname(save_path_);
-    std::string base = Glib::path_get_basename(save_path_);
-    const auto dot = base.rfind('.');
-    if (dot != std::string::npos)
-      base = base.substr(0, dot);
-    save_path_ = Glib::build_filename(dir, base + "." + ext());
-  }
+  next_take_.change_ext(ext());
   if (persist_ok_)
     settings_.save();
 }
@@ -324,7 +317,7 @@ void MainWindow::on_dest_set()
   if (dir.empty() || !Glib::file_test(dir, Glib::FILE_TEST_IS_DIR))
     return;
   settings_.last_folder = dir;
-  save_path_.clear();
+  next_take_.clear();
   persist_folder();
 }
 
@@ -341,7 +334,7 @@ void MainWindow::on_default_folder()
   if (dir.empty() || !Glib::file_test(dir, Glib::FILE_TEST_IS_DIR))
     return;
   settings_.last_folder = dir;
-  save_path_.clear();
+  next_take_.clear();
   persist_folder();
   sync_dest();
 }
@@ -362,7 +355,6 @@ CaptureOpts MainWindow::current_opts() const
   o.audio = selected_device();
   o.format = format_from_id(format_.get_active_id().raw());
   o.fps = selected_fps();
-  o.path = save_path_.empty() ? default_output_path(ext(), settings_.last_folder) : save_path_;
   return o;
 }
 
@@ -500,8 +492,9 @@ void MainWindow::begin_capture()
 {
   persist_capture();
   auto opts = current_opts();
-  save_path_ = opts.path;
-  settings_.last_folder = Glib::path_get_dirname(save_path_);
+  /* Each take gets its own file. A Save As name is spent here, even if start() fails. */
+  opts.path = next_take_.take(ext(), settings_.last_folder);
+  settings_.last_folder = Glib::path_get_dirname(opts.path);
   persist_folder();
   sync_dest();
   refresh_preview();
@@ -625,11 +618,11 @@ void MainWindow::on_save_as()
   dlg.set_current_name(Glib::path_get_basename(default_output_path(ext(), settings_.last_folder)));
   if (dlg.run() != Gtk::RESPONSE_ACCEPT)
     return;
-  save_path_ = dlg.get_filename();
-  settings_.last_folder = Glib::path_get_dirname(save_path_);
+  next_take_.set(dlg.get_filename());
+  settings_.last_folder = Glib::path_get_dirname(next_take_.pinned());
   persist_capture();
   sync_dest();
-  status_.set_text("Next capture: " + Glib::path_get_basename(save_path_));
+  status_.set_text("Next capture: " + Glib::path_get_basename(next_take_.pinned()));
 }
 
 void MainWindow::on_quit()
