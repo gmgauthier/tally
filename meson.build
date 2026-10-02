@@ -1,7 +1,7 @@
 project(
   'tally',
   'cpp',
-  version: '0.3.1',
+  version: '0.3.2',
   license: 'Unlicense',
   meson_version: '>=0.56',
   default_options: [
@@ -32,6 +32,7 @@ executable(
   'src/main.cpp',
   'src/application.cpp',
   'src/paths.cpp',
+  'src/next_take.cpp',
   'src/main_window.cpp',
   'src/about_dialog.cpp',
   'src/capture.cpp',
@@ -75,3 +76,13 @@ tally_tests = executable(
   dependencies: [gtkmm, x11],
 )
 test('format', tally_tests)
+
+next_take_tests = executable(
+  'tally-next-take-tests',
+  'tests/test_next_take.cpp',
+  'src/next_take.cpp',
+  'src/paths.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm],
+)
+test('next-take', next_take_tests)

@@ -10,9 +10,9 @@ Repos: https://gitea.scriptorium/gmgauthier/tally (origin), https://github.com/g
 
 Engine: ffmpeg `x11grab` on XLibre. Face: gtkmm. Peek / SimpleScreenRecorder look 2012.
 
-## Status (2026-10-01)
+## Status (2026-10-02)
 
-**v0.3.1.** Window plus full-screen / region / window capture to WebM, AVI, MP4, or MKV. Optional audio source with a device combo (Pulse then ALSA; Default / Internal microphone if none). FPS, default folder, hide while recording. Headless test suite and BUG-BACKLOG.md. Packaged.
+**v0.3.2.** Each take records to its own file; Save As names the next take only. **v0.3.1.** Window plus full-screen / region / window capture to WebM, AVI, MP4, or MKV. Optional audio source with a device combo (Pulse then ALSA; Default / Internal microphone if none). FPS, default folder, hide while recording. Headless test suite and BUG-BACKLOG.md. Packaged.
 
 ## 1. Locked decisions
 

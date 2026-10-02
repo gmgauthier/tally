@@ -2,17 +2,9 @@
 
 Reviewed 2026-10-01 against the 0.3.0 sources.
 
-`meson test` runs `tests/test_format.cpp` (`format`). It checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. Capture, geometry, and the stop chip need a display, so they are not in that binary. ffmpeg is spawned with an argv vector, not a shell.
+`meson test` runs `tests/test_format.cpp` (`format`) and `tests/test_next_take.cpp` (`next-take`). `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, and that a Save As name is used for one take. Capture, geometry, and the stop chip need a display, so they are not in that binary. ffmpeg is spawned with an argv vector, not a shell.
 
 ## Open
-
-### Later takes overwrite the first file
-
-- Severity: data-loss
-- Confidence: high
-- Where: `src/main_window.cpp:365`, `src/main_window.cpp:503`, `src/capture.cpp:67`
-- Trigger: Record once (default timestamp name, or Save As). Record again without changing the folder.
-- Outcome: `begin_capture` stores the path in `save_path_` and never clears it after a take. `save_path_` is cleared only when the folder changes (`on_dest_set`, `on_default_folder`). The next take reuses that path, and ffmpeg is passed `-y`, so the previous recording is truncated as soon as the new input opens. A failed `start()` still leaves the path pinned.
 
 ### A failed ffmpeg is reported as Saved
 
@@ -56,4 +48,11 @@ Reviewed 2026-10-01 against the 0.3.0 sources.
 
 ## Closed
 
-None.
+### Later takes overwrite the first file
+
+- Severity: data-loss
+- Confidence: high
+- Where: `src/main_window.cpp` `begin_capture`, `src/next_take.cpp`, `src/paths.cpp` `default_output_path`
+- Trigger: Record once (default timestamp name, or Save As). Record again without changing the folder.
+- Outcome: `begin_capture` stores the path in `save_path_` and never clears it after a take. `save_path_` is cleared only when the folder changes (`on_dest_set`, `on_default_folder`). The next take reuses that path, and ffmpeg is passed `-y`, so the previous recording is truncated as soon as the new input opens. A failed `start()` still leaves the path pinned.
+- Fixed in v0.3.2: Each take asks for its own file. A Save As name is used for the next take only, and is spent even when `start()` fails. A default name that already exists gets `-2`, `-3`, and so on, so two takes in the same second do not share a file.
