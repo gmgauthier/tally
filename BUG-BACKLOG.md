@@ -2,19 +2,20 @@
 
 Reviewed 2026-10-01 against the 0.3.0 sources.
 
-`meson test` runs `tests/test_format.cpp` (`format`), `tests/test_next_take.cpp` (`next-take`), `tests/test_capture.cpp` (`capture`), `tests/test_geometry.cpp` (`geometry`), `tests/test_record_plan.cpp` (`record-plan`), and `tests/test_audio.cpp` (`audio`). `audio` checks that Default records from Pulse when Pulse lists sources, and from ALSA when the list fell back to `arecord -l`. `record-plan` checks that a full-screen take with Hide this window on withdraws the window before ffmpeg starts. `geometry` checks the x11grab size and offset for a rectangle inside the root, off the left and top, past the right and bottom, and larger than the root. `capture` runs a take against a stand-in `ffmpeg` on `PATH` and checks that a non-zero exit is an error and not saved, and that a clean exit on Stop is saved. `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, and that a Save As name is used for one take. Picking a region or window, and the stop chip, need a display, so they are not in these binaries. ffmpeg is spawned with an argv vector, not a shell.
+`meson test` runs `tests/test_format.cpp` (`format`), `tests/test_next_take.cpp` (`next-take`), `tests/test_capture.cpp` (`capture`), `tests/test_geometry.cpp` (`geometry`), `tests/test_record_plan.cpp` (`record-plan`), and `tests/test_audio.cpp` (`audio`). `audio` checks that Default records from Pulse when Pulse lists sources, and from ALSA when the list fell back to `arecord -l`. `record-plan` checks that a full-screen take with Hide this window on withdraws the window before ffmpeg starts. `geometry` checks the x11grab size and offset for a rectangle inside the root, off the left and top, past the right and bottom, and larger than the root. `capture` runs a take against a stand-in `ffmpeg` on `PATH` and checks that a non-zero exit is an error and not saved, and that a clean exit on Stop is saved. `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, and that a Save As name is used for one take. `stop-key` runs under xvfb. It checks the Ctrl+. chord, that the recording chip stays on the taskbar, and that mapping the chip grabs and releases that chord. Picking a region or window still needs a display and is not in these binaries. ffmpeg is spawned with an argv vector, not a shell.
 
 ## Open
+
+## Closed
 
 ### Stop shortcut does not work while the window is hidden
 
 - Severity: incorrect
 - Confidence: high
-- Where: `src/main_window.cpp:192`, `src/stop_chip.cpp:12`, `src/stop_chip.cpp:26`
+- Where: `src/main_window.cpp` Capture → Stop, `src/stop_chip.cpp`
 - Trigger: Record with hide-window on. Focus is in another application. Press Ctrl+. or look for Tally on the taskbar.
 - Outcome: Both accelerators are window `AccelGroup`s. The main window is withdrawn, so it gets no keys and is not on the taskbar. The chip sets `skip_taskbar_hint` and does not take focus, so its Ctrl+. does not fire either. The control that works is clicking the chip. The tooltip says Stop is available from the taskbar or Ctrl+.
-
-## Closed
+- Fixed in v0.3.7: The recording chip stays on the taskbar. While it is mapped it grabs Ctrl+. on the root window, including when Caps Lock or Num Lock is down, and that chord stops the take.
 
 ### ALSA fallback still records with Pulse
 
