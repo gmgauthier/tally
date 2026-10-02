@@ -12,7 +12,7 @@ Engine: ffmpeg `x11grab` on XLibre. Face: gtkmm. Peek / SimpleScreenRecorder loo
 
 ## Status (2026-10-02)
 
-**v0.3.6.** With no Pulse server, Default records from ALSA. **v0.3.5.** A full-screen take hides the Tally window before ffmpeg starts. **v0.3.4.** A window or region that runs off the screen is clipped to the screen edge before ffmpeg sees it. **v0.3.3.** A failed ffmpeg leaves its error in the status line instead of Saved. **v0.3.2.** Each take records to its own file; Save As names the next take only. **v0.3.1.** Window plus full-screen / region / window capture to WebM, AVI, MP4, or MKV. Optional audio source with a device combo (Pulse then ALSA; Default / Internal microphone if none). FPS, default folder, hide while recording. Headless test suite and BUG-BACKLOG.md. Packaged.
+**v0.3.7.** Ctrl+. stops a hidden recording, and the Stop chip stays on the taskbar. **v0.3.6.** With no Pulse server, Default records from ALSA. **v0.3.5.** A full-screen take hides the Tally window before ffmpeg starts. **v0.3.4.** A window or region that runs off the screen is clipped to the screen edge before ffmpeg sees it. **v0.3.3.** A failed ffmpeg leaves its error in the status line instead of Saved. **v0.3.2.** Each take records to its own file; Save As names the next take only. **v0.3.1.** Window plus full-screen / region / window capture to WebM, AVI, MP4, or MKV. Optional audio source with a device combo (Pulse then ALSA; Default / Internal microphone if none). FPS, default folder, hide while recording. Headless test suite and BUG-BACKLOG.md. Packaged.
 
 ## 1. Locked decisions
 

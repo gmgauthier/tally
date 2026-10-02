@@ -1,3 +1,9 @@
+tally (0.3.7-1) unstable; urgency=medium
+
+  * Ctrl+. stops a hidden recording, and the Stop chip stays on the taskbar.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Fri, 02 Oct 2026 18:02:10 +0100
+
 tally (0.3.6-1) unstable; urgency=medium
 
   * Record Default from ALSA when the device list fell back to arecord.
