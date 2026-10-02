@@ -121,3 +121,15 @@ audio_tests = executable(
   dependencies: [gtkmm],
 )
 test('audio', audio_tests)
+
+stop_key_tests = executable(
+  'tally-stop-key-tests',
+  'tests/test_stop_key.cpp',
+  'src/stop_chip.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm, x11],
+)
+xvfb = find_program('xvfb-run', required: false)
+if xvfb.found()
+  test('stop-key', xvfb, args: ['-a', stop_key_tests], timeout: 60)
+endif
