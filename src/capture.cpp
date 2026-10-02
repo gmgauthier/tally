@@ -220,9 +220,10 @@ void Capture::on_child(GPid pid, int status)
   Glib::spawn_close_pid(pid_);
   pid_ = 0;
   child_.disconnect();
-  if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+  const bool saved = WIFEXITED(status) && WEXITSTATUS(status) == 0;
+  if (!saved)
     signal_error_.emit("ffmpeg exited with an error");
-  signal_stopped_.emit();
+  signal_stopped_.emit(saved);
 }
 
 void Capture::reap()

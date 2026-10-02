@@ -2,17 +2,9 @@
 
 Reviewed 2026-10-01 against the 0.3.0 sources.
 
-`meson test` runs `tests/test_format.cpp` (`format`) and `tests/test_next_take.cpp` (`next-take`). `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, and that a Save As name is used for one take. Capture, geometry, and the stop chip need a display, so they are not in that binary. ffmpeg is spawned with an argv vector, not a shell.
+`meson test` runs `tests/test_format.cpp` (`format`), `tests/test_next_take.cpp` (`next-take`), and `tests/test_capture.cpp` (`capture`). `capture` runs a take against a stand-in `ffmpeg` on `PATH` and checks that a non-zero exit is an error and not saved, and that a clean exit on Stop is saved. `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, and that a Save As name is used for one take. Capture, geometry, and the stop chip need a display, so they are not in that binary. ffmpeg is spawned with an argv vector, not a shell.
 
 ## Open
-
-### A failed ffmpeg is reported as Saved
-
-- Severity: incorrect
-- Confidence: high
-- Where: `src/capture.cpp:223`, `src/main_window.cpp:104`, `src/main_window.cpp:572`
-- Trigger: ffmpeg exits non-zero after spawn. An x11grab rectangle outside the root, or a bad Pulse device, does this and does not leave a usable file.
-- Outcome: `on_child` emits the error and then `signal_stopped_`. `on_stopped` is connected first and always sets the status to `Saved <name>`, so the error line is replaced. The UI says the take was saved.
 
 ### Off-screen window geometry is shifted or rejected
 
@@ -47,6 +39,15 @@ Reviewed 2026-10-01 against the 0.3.0 sources.
 - Outcome: Both accelerators are window `AccelGroup`s. The main window is withdrawn, so it gets no keys and is not on the taskbar. The chip sets `skip_taskbar_hint` and does not take focus, so its Ctrl+. does not fire either. The control that works is clicking the chip. The tooltip says Stop is available from the taskbar or Ctrl+.
 
 ## Closed
+
+### A failed ffmpeg is reported as Saved
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/capture.cpp` `on_child`, `src/main_window.cpp` `on_stopped`
+- Trigger: ffmpeg exits non-zero after spawn. An x11grab rectangle outside the root, or a bad Pulse device, does this and does not leave a usable file.
+- Outcome: `on_child` emits the error and then `signal_stopped_`. `on_stopped` is connected first and always sets the status to `Saved <name>`, so the error line is replaced. The UI says the take was saved.
+- Fixed in v0.3.3: `signal_stopped` says whether ffmpeg exited cleanly. The status shows `Saved <name>` only then; after a non-zero exit, or a signal, the error line stays.
 
 ### Later takes overwrite the first file
 

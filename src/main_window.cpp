@@ -556,13 +556,15 @@ void MainWindow::reveal_after_record()
   restore_main();
 }
 
-void MainWindow::on_stopped()
+void MainWindow::on_stopped(bool saved)
 {
   if (tick_.connected())
     tick_.disconnect();
   set_lamp(false);
   sync_buttons();
-  status_.set_text("Saved " + Glib::path_get_basename(cap_.path()));
+  /* A failed ffmpeg already put its error in the status line; keep it. */
+  if (saved)
+    status_.set_text("Saved " + Glib::path_get_basename(cap_.path()));
   reveal_after_record();
 }
 
