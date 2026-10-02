@@ -21,6 +21,9 @@ struct AudioDevice {
  * a Default row. Empty hardware list still yields Default so the combo is
  * never blank. */
 std::vector<AudioDevice> list_audio_inputs();
+/* The combo rows for PULSE sources, or the ALSA capture devices when there are none. */
+std::vector<AudioDevice> assemble_audio_inputs(const std::vector<AudioDevice>& pulse,
+                                               const std::vector<AudioDevice>& alsa);
 std::string pulse_default_source();
 bool looks_internal(const AudioDevice& d);
 std::string pick_audio_device(const std::vector<AudioDevice>& devices, const std::string& saved);

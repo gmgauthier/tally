@@ -1,7 +1,7 @@
 project(
   'tally',
   'cpp',
-  version: '0.3.5',
+  version: '0.3.6',
   license: 'Unlicense',
   meson_version: '>=0.56',
   default_options: [
@@ -111,3 +111,13 @@ record_plan_tests = executable(
   include_directories: inc,
 )
 test('record-plan', record_plan_tests)
+
+audio_tests = executable(
+  'tally-audio-tests',
+  'tests/test_audio.cpp',
+  'src/audio_devices.cpp',
+  'src/capture.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm],
+)
+test('audio', audio_tests)

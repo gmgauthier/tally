@@ -125,15 +125,21 @@ bool looks_internal(const AudioDevice& d)
 
 std::vector<AudioDevice> list_audio_inputs()
 {
-  std::vector<AudioDevice> found = from_pulse();
-  if (found.empty())
-    found = from_alsa();
+  const std::vector<AudioDevice> pulse = from_pulse();
+  return assemble_audio_inputs(pulse, pulse.empty() ? from_alsa() : std::vector<AudioDevice>{});
+}
 
+std::vector<AudioDevice> assemble_audio_inputs(const std::vector<AudioDevice>& pulse,
+                                               const std::vector<AudioDevice>& alsa)
+{
+  const std::vector<AudioDevice>& found = pulse.empty() ? alsa : pulse;
   std::vector<AudioDevice> out;
   AudioDevice def;
   def.id = "default";
   def.label = found.empty() ? "Default / Internal microphone" : "Default";
-  def.backend = AudioBackend::system_default;
+  /* With no Pulse server the list came from arecord -l, so Default is ALSA's default PCM. */
+  def.backend =
+      (pulse.empty() && !alsa.empty()) ? AudioBackend::alsa : AudioBackend::system_default;
   out.push_back(def);
   for (const auto& d : found)
     out.push_back(d);
