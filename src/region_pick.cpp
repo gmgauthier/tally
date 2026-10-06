@@ -3,6 +3,7 @@
 #include "region_pick.hpp"
 
 #include <gdkmm/cursor.h>
+#include <gdkmm/seat.h>
 
 #include <algorithm>
 
@@ -21,6 +22,61 @@ bool contains(const Rect& r, int x, int y)
 
 }  // namespace
 
+Rect picker_span(const std::vector<Rect>& monitors, int screen_w, int screen_h)
+{
+  int x0 = 0;
+  int y0 = 0;
+  int x1 = 0;
+  int y1 = 0;
+  bool any = false;
+  for (const Rect& m : monitors) {
+    if (m.w <= 0 || m.h <= 0)
+      continue;
+    const int mx1 = m.x + m.w;
+    const int my1 = m.y + m.h;
+    if (!any) {
+      x0 = m.x;
+      y0 = m.y;
+      x1 = mx1;
+      y1 = my1;
+      any = true;
+    } else {
+      if (m.x < x0)
+        x0 = m.x;
+      if (m.y < y0)
+        y0 = m.y;
+      if (mx1 > x1)
+        x1 = mx1;
+      if (my1 > y1)
+        y1 = my1;
+    }
+  }
+  if (screen_w > 0 && screen_h > 0) {
+    if (!any) {
+      x1 = screen_w;
+      y1 = screen_h;
+      any = true;
+    } else {
+      if (0 < x0)
+        x0 = 0;
+      if (0 < y0)
+        y0 = 0;
+      if (screen_w > x1)
+        x1 = screen_w;
+      if (screen_h > y1)
+        y1 = screen_h;
+    }
+  }
+  Rect r;
+  if (!any)
+    return r;
+  r.x = x0;
+  r.y = y0;
+  r.w = x1 - x0;
+  r.h = y1 - y0;
+  return r;
+}
+
 RegionPick::RegionPick()
 {
   set_title("Select");
@@ -29,7 +85,6 @@ RegionPick::RegionPick()
   set_keep_above(true);
   set_skip_taskbar_hint(true);
   set_accept_focus(true);
-  fullscreen();
   add_events(Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK |
              Gdk::KEY_PRESS_MASK);
   set_can_focus(true);
@@ -44,11 +99,80 @@ void RegionPick::begin(const Glib::RefPtr<Gdk::Pixbuf>& desktop, Mode mode,
   dragging_ = false;
   hover_ = -1;
   x0_ = y0_ = x1_ = y1_ = 0;
+  cover_screen();
   if (auto gdk = get_window()) {
     auto cur = Gdk::Cursor::create(gdk->get_display(), Gdk::CROSSHAIR);
     gdk->set_cursor(cur);
   }
   queue_draw();
+}
+
+void RegionPick::on_realize()
+{
+  Gtk::Window::on_realize();
+  /* fullscreen() is one monitor on i3. An override-redirect window can cover
+     the whole Gdk screen, which is what the snapshot already is. */
+  if (auto gdk = get_window())
+    gdk->set_override_redirect(true);
+}
+
+void RegionPick::on_map()
+{
+  Gtk::Window::on_map();
+  cover_screen();
+  grab_input();
+}
+
+void RegionPick::on_unmap()
+{
+  ungrab_input();
+  Gtk::Window::on_unmap();
+}
+
+void RegionPick::cover_screen()
+{
+  auto screen = get_screen();
+  if (!screen)
+    return;
+  std::vector<Rect> monitors;
+  const int n = screen->get_n_monitors();
+  for (int i = 0; i < n; ++i) {
+    Gdk::Rectangle g;
+    screen->get_monitor_geometry(i, g);
+    monitors.push_back(Rect{g.get_x(), g.get_y(), g.get_width(), g.get_height()});
+  }
+  const Rect span = picker_span(monitors, screen->get_width(), screen->get_height());
+  if (span.w < 2 || span.h < 2)
+    return;
+  move(span.x, span.y);
+  resize(span.w, span.h);
+}
+
+void RegionPick::grab_input()
+{
+  if (grabbed_)
+    return;
+  auto gdk = get_window();
+  auto display = Gdk::Display::get_default();
+  if (!gdk || !display)
+    return;
+  auto seat = display->get_default_seat();
+  if (!seat)
+    return;
+  auto cursor = Gdk::Cursor::create(display, Gdk::CROSSHAIR);
+  const auto status = seat->grab(gdk, Gdk::SEAT_CAPABILITY_ALL, false, cursor);
+  grabbed_ = status == Gdk::GRAB_SUCCESS;
+}
+
+void RegionPick::ungrab_input()
+{
+  if (!grabbed_)
+    return;
+  if (auto display = Gdk::Display::get_default()) {
+    if (auto seat = display->get_default_seat())
+      seat->ungrab();
+  }
+  grabbed_ = false;
 }
 
 const ClientWin* RegionPick::hit_window(int x, int y) const
