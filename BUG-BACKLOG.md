@@ -2,11 +2,20 @@
 
 Reviewed 2026-10-01 against the 0.3.0 sources.
 
-`meson test` runs `tests/test_format.cpp` (`format`), `tests/test_next_take.cpp` (`next-take`), `tests/test_capture.cpp` (`capture`), `tests/test_geometry.cpp` (`geometry`), `tests/test_record_plan.cpp` (`record-plan`), and `tests/test_audio.cpp` (`audio`). `audio` checks that Default records from Pulse when Pulse lists sources, and from ALSA when the list fell back to `arecord -l`. `record-plan` checks that a full-screen take with Hide this window on withdraws the window before ffmpeg starts. `geometry` checks the x11grab size and offset for a rectangle inside the root, off the left and top, past the right and bottom, and larger than the root. `capture` runs a take against a stand-in `ffmpeg` on `PATH` and checks that a non-zero exit is an error and not saved, and that a clean exit on Stop is saved. `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, and that a Save As name is used for one take. `stop-key` runs under xvfb. It checks the Ctrl+. chord, that the recording chip stays on the taskbar, and that mapping the chip grabs and releases that chord. Picking a region or window still needs a display and is not in these binaries. ffmpeg is spawned with an argv vector, not a shell.
+`meson test` runs `tests/test_format.cpp` (`format`), `tests/test_next_take.cpp` (`next-take`), `tests/test_capture.cpp` (`capture`), `tests/test_geometry.cpp` (`geometry`), `tests/test_record_plan.cpp` (`record-plan`), and `tests/test_audio.cpp` (`audio`). `audio` checks that Default records from Pulse when Pulse lists sources, and from ALSA when the list fell back to `arecord -l`. `record-plan` checks that a full-screen take with Hide this window on withdraws the window before ffmpeg starts. `geometry` checks the x11grab size and offset for a rectangle inside the root, off the left and top, past the right and bottom, and larger than the root. `capture` runs a take against a stand-in `ffmpeg` on `PATH` and checks that a non-zero exit is an error and not saved, and that a clean exit on Stop is saved. `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, that a Save As name is used for one take, and that changing the format does not pin a different file that already exists. `stop-key` runs under xvfb. It checks the Ctrl+. chord, that the recording chip stays on the taskbar, and that mapping the chip grabs and releases that chord. Picking a region or window still needs a display and is not in these binaries. ffmpeg is spawned with an argv vector, not a shell.
 
 ## Open
 
 ## Closed
+
+### Save As rewrites the extension onto a different file
+
+- Severity: data-loss
+- Confidence: high
+- Where: `src/next_take.cpp` `change_ext`, `src/capture.cpp` `ffmpeg_argv`, `src/main_window.cpp` `on_save_as`, `persist_capture`
+- Trigger: Save As confirms `demo.webm` while the format combo is MKV, and `demo.mkv` is already in that folder. Record.
+- Outcome: `persist_capture` calls `change_ext`, which replaces the extension. ffmpeg is started with `-y`, so `demo.mkv` is truncated. The chooser never asked about that file. Default names already skip a file that exists.
+- Fixed in v0.3.8: The path the chooser confirmed may still be overwritten. A rewritten extension that names a different existing file gets a free sibling (`demo-2.mkv`, `demo-3.mkv`, and so on).
 
 ### Stop shortcut does not work while the window is hidden
 
