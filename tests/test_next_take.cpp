@@ -58,6 +58,27 @@ int main()
   idle.change_ext("mp4");
   CHECK(idle.pinned().empty());
 
+  /* A rewritten extension must not pin a different file that already exists. */
+  const std::string occupied = dir + "/clip.mkv";
+  const std::string occupied_2 = dir + "/clip-2.mkv";
+  touch(occupied);
+  touch(occupied_2);
+  tally::NextTake dodge;
+  dodge.set(dir + "/clip.webm");
+  dodge.change_ext("mkv");
+  CHECK(dodge.pinned() == dir + "/clip-3.mkv");
+  CHECK(!Glib::file_test(dodge.pinned(), Glib::FILE_TEST_EXISTS));
+  /* The stem stays the name the chooser confirmed, not the sibling. */
+  dodge.change_ext("mp4");
+  CHECK(dodge.pinned() == dir + "/clip.mp4");
+  /* The confirmed path itself may still be overwritten. */
+  const std::string kept = dir + "/keep.webm";
+  touch(kept);
+  tally::NextTake same;
+  same.set(kept);
+  same.change_ext("webm");
+  CHECK(same.pinned() == kept);
+
   const std::string rm = "rm -rf '" + dir + "'";
   if (std::system(rm.c_str()) != 0)
     std::cerr << "could not remove " << dir << "\n";

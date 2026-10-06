@@ -12,17 +12,20 @@ class NextTake {
   void set(const std::string& path)
   {
     pinned_ = path;
+    confirmed_ = path;
   }
   void clear()
   {
     pinned_.clear();
+    confirmed_.clear();
   }
   const std::string& pinned() const
   {
     return pinned_;
   }
 
-  /* Keeps a pinned Save As name in step with the format combo. */
+  /* Keeps a pinned Save As name in step with the format combo.
+     A different file that already exists is left alone. */
   void change_ext(const std::string& ext);
 
   /* Path for the take about to start, in FOLDER with EXT unless Save As pinned one. */
@@ -30,6 +33,7 @@ class NextTake {
 
  private:
   std::string pinned_;
+  std::string confirmed_;
 };
 
 }  // namespace tally
