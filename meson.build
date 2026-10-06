@@ -105,6 +105,15 @@ geometry_tests = executable(
 )
 test('geometry', geometry_tests)
 
+region_span_tests = executable(
+  'tally-region-span-tests',
+  'tests/test_region_span.cpp',
+  'src/region_pick.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm],
+)
+test('region-span', region_span_tests)
+
 record_plan_tests = executable(
   'tally-record-plan-tests',
   'tests/test_record_plan.cpp',

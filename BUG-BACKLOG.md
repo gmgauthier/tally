@@ -2,11 +2,20 @@
 
 Reviewed 2026-10-01 against the 0.3.0 sources.
 
-`meson test` runs `tests/test_format.cpp` (`format`), `tests/test_next_take.cpp` (`next-take`), `tests/test_capture.cpp` (`capture`), `tests/test_geometry.cpp` (`geometry`), `tests/test_record_plan.cpp` (`record-plan`), and `tests/test_audio.cpp` (`audio`). `audio` checks that Default records from Pulse when Pulse lists sources, and from ALSA when the list fell back to `arecord -l`. `record-plan` checks that a full-screen take with Hide this window on withdraws the window before ffmpeg starts. `geometry` checks the x11grab size and offset for a rectangle inside the root, off the left and top, past the right and bottom, and larger than the root. `capture` runs a take against a stand-in `ffmpeg` on `PATH` and checks that a non-zero exit is an error and not saved, and that a clean exit on Stop is saved. `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, that a Save As name is used for one take, and that changing the format does not pin a different file that already exists. `stop-key` runs under xvfb. It checks the Ctrl+. chord, that the recording chip stays on the taskbar, and that mapping the chip grabs and releases that chord. Picking a region or window still needs a display and is not in these binaries. ffmpeg is spawned with an argv vector, not a shell.
+`meson test` runs `tests/test_format.cpp` (`format`), `tests/test_next_take.cpp` (`next-take`), `tests/test_capture.cpp` (`capture`), `tests/test_geometry.cpp` (`geometry`), `tests/test_region_span.cpp` (`region-span`), `tests/test_record_plan.cpp` (`record-plan`), and `tests/test_audio.cpp` (`audio`). `audio` checks that Default records from Pulse when Pulse lists sources, and from ALSA when the list fell back to `arecord -l`. `record-plan` checks that a full-screen take with Hide this window on withdraws the window before ffmpeg starts. `geometry` checks the x11grab size and offset for a rectangle inside the root, off the left and top, past the right and bottom, and larger than the root. `capture` runs a take against a stand-in `ffmpeg` on `PATH` and checks that a non-zero exit is an error and not saved, and that a clean exit on Stop is saved. `format` checks the shipped format ids (`webm`, `avi`, `mp4`, `mkv`) and the unknown-id fallback. `next-take` checks that a second take never gets the first take's file, that a Save As name is used for one take, and that changing the format does not pin a different file that already exists. `region-span` checks that the region picker covers every monitor and the whole Gdk screen the snapshot uses, not the one monitor `fullscreen()` would cover. `stop-key` runs under xvfb. It checks the Ctrl+. chord, that the recording chip stays on the taskbar, and that mapping the chip grabs and releases that chord. Picking a region or window still needs a display and is not in these binaries. ffmpeg is spawned with an argv vector, not a shell.
 
 ## Open
 
 ## Closed
+
+### Region pick covers one monitor
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/region_pick.cpp` `RegionPick`, `src/x11_windows.cpp` `snapshot_desktop`
+- Trigger: Two monitors. Record with Region or Window. The desktop snapshot is the whole Gdk screen.
+- Outcome: `fullscreen()` covers the monitor the window is on. The other monitor is outside the overlay, so a drag or a window there cannot be chosen. The snapshot is still both monitors.
+- Fixed in v0.3.9: The overlay is the span of every monitor, expanded to the Gdk screen the snapshot uses. It is not the fullscreen state.
 
 ### Save As rewrites the extension onto a different file
 
