@@ -1,3 +1,9 @@
+tally (0.3.9-1) unstable; urgency=medium
+
+  * The region picker covers every monitor.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Tue, 06 Oct 2026 23:11:52 +0100
+
 tally (0.3.8-1) unstable; urgency=medium
 
   * A Save As extension change skips a different existing file.
