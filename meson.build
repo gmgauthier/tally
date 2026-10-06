@@ -1,7 +1,7 @@
 project(
   'tally',
   'cpp',
-  version: '0.3.7',
+  version: '0.3.8',
   license: 'Unlicense',
   meson_version: '>=0.56',
   default_options: [
